@@ -11,7 +11,8 @@ describe 'RailsAdmin Namespaced Model New', type: :request do
 
   describe 'ApplicationController#to_model_name' do
     it 'turns cms~basic_page into Cms::BasicPage' do
-      expect(RailsAdmin::ApplicationController.new.to_model_name('cms~basic_page')).to eq('Cms::BasicPage')
+      expect(RailsAdmin::MainController.new.send(:to_model_name, 'cms~basic_page'))
+        .to eq('Cms::BasicPage')
     end
   end
 

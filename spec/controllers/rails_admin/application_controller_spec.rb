@@ -1,12 +1,6 @@
 require 'spec_helper'
 
 describe RailsAdmin::ApplicationController, type: :controller do
-  describe '#to_model_name' do
-    it 'works with modules' do
-      expect(controller.to_model_name('conversations~conversation')).to eq('Conversations::Conversation')
-    end
-  end
-
   describe 'helper method _get_plugin_name' do
     it 'works by default' do
       expect(controller.send(:_get_plugin_name)).to eq(['Dummy App', 'Admin'])

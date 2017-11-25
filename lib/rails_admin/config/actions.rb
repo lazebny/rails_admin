@@ -2,103 +2,109 @@ module RailsAdmin
   module Config
     module Actions
       class << self
-        def all(scope = nil, bindings = {})
+        def all(scope = :all, bindings = {})
+          ActiveSupport::Deprecation.warn(
+            "Method 'all' is deprecated and will be removed in Rails Admin major release.")
+
           if scope.is_a?(Hash)
             bindings = scope
             scope = :all
           end
-          scope ||= :all
-          init_actions!
-          actions = begin
-            case scope
-            when :all
-              @@actions
-            when :root
-              @@actions.select(&:root?)
-            when :collection
-              @@actions.select(&:collection?)
-            when :bulkable
-              @@actions.select(&:bulkable?)
-            when :member
-              @@actions.select(&:member?)
-            end
+          case scope
+          when :all
+            select(bindings)
+          when :root, :collection, :bulkable, :member
+            select(bindings, &:"#{scope}?")
           end
-          actions = actions.collect { |action| action.with(bindings) }
+        end
+
+        def select(bindings = {}, &scope)
+          init_actions!
+
+          actions =
+            if block_given?
+              @@actions.values.select(&scope)
+            else
+              @@actions.values
+            end
+
+          return actions if bindings.empty?
+
+          actions = actions.map { |action| action.with(bindings) }
           bindings[:controller] ? actions.select(&:visible?) : actions
         end
 
         def find(custom_key, bindings = {})
           init_actions!
-          action = @@actions.detect { |a| a.custom_key == custom_key }.try(:with, bindings)
-          bindings[:controller] ? (action.try(:visible?) && action || nil) : action
+          action = @@actions[custom_key]
+
+          return if action.nil?
+
+          action = action.with(bindings)
+
+          return if bindings[:controller] && action.hidden?
+
+          action
         end
 
         def collection(key, parent_class = :base, &block)
-          add_action key, parent_class, :collection, &block
+          add_action(key, parent_class, :collection, &block)
         end
 
         def member(key, parent_class = :base, &block)
-          add_action key, parent_class, :member, &block
+          add_action(key, parent_class, :member, &block)
         end
 
         def root(key, parent_class = :base, &block)
-          add_action key, parent_class, :root, &block
+          add_action(key, parent_class, :root, &block)
         end
 
         def add_action(key, parent_class, parent, &block)
-          a = "RailsAdmin::Config::Actions::#{parent_class.to_s.camelize}".constantize.new
-          a.instance_eval(%(
+          action = RailsAdmin::Config::Actions.const_get(parent_class.to_s.camelize).new
+          action.instance_eval(%(
             #{parent} true
             def key
               :#{key}
             end
           ))
-          add_action_custom_key(a, &block)
+          add_action_custom_key(action, &block)
         end
 
         def reset
           @@actions = nil
         end
 
-        def register(name, klass = nil)
-          if klass.nil? && name.is_a?(Class)
-            klass = name
-            name = klass.to_s.demodulize.underscore.to_sym
+        def register(klass)
+          self.class.send(:define_method, klass.to_s.demodulize.underscore.to_sym) do |&block|
+            add_action_custom_key(klass.new, &block)
           end
-
-          instance_eval %{
-            def #{name}(&block)
-              action = #{klass}.new
-              add_action_custom_key(action, &block)
-            end
-          }
         end
 
       private
 
         def init_actions!
-          @@actions ||= [
-            Dashboard.new,
-            Index.new,
-            Show.new,
-            New.new,
-            Edit.new,
-            Export.new,
-            Delete.new,
-            BulkDelete.new,
-            HistoryShow.new,
-            HistoryIndex.new,
-            ShowInApp.new,
-          ]
+          @@actions ||= {
+            dashboard: Dashboard.new,
+            index: Index.new,
+            show: Show.new,
+            new: New.new,
+            edit: Edit.new,
+            export: Export.new,
+            delete: Delete.new,
+            bulk_delete: BulkDelete.new,
+            history_show: HistoryShow.new,
+            history_index: HistoryIndex.new,
+            show_in_app: ShowInApp.new,
+          }
         end
 
         def add_action_custom_key(action, &block)
-          action.instance_eval(&block) if block
-          @@actions ||= []
-          if action.custom_key.in?(@@actions.collect(&:custom_key))
-            raise "Action #{action.custom_key} already exists. Please change its custom key."
+          action.instance_eval(&block) if block_given?
+          @@actions ||= {}
+          if @@actions.key?(action.custom_key)
+            raise ::RailsAdmin::Errors::ActionAlreadyRegistred, action
           else
-            @@actions << action
+            @@actions[action.custom_key] = action
           end
         end
       end

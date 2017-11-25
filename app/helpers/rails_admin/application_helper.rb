@@ -27,8 +27,18 @@ module RailsAdmin
       RailsAdmin::Config::Actions.find(key, controller: controller, abstract_model: abstract_model, object: object)
     end
 
-    def actions(scope = :all, abstract_model = nil, object = nil)
-      RailsAdmin::Config::Actions.all(scope, controller: controller, abstract_model: abstract_model, object: object)
+    def actions(scope = nil, abstract_model = nil, object = nil)
+      bindings = {
+        controller: controller,
+        abstract_model: abstract_model,
+        object: object,
+      }
+
+      if scope.nil? || scope == :all
+        RailsAdmin::Config::Actions.select(bindings)
+      else
+        RailsAdmin::Config::Actions.select(bindings, &:"#{scope}?")
+      end
     end
 
     def edit_user_link

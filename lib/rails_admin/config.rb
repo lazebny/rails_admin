@@ -1,5 +1,6 @@
 require 'rails_admin/config/lazy_model'
 require 'rails_admin/config/sections/list'
+require 'rails_admin/config/commands'
 require 'active_support/core_ext/module/attribute_accessors'
 
 module RailsAdmin
@@ -203,7 +204,11 @@ module RailsAdmin
 
       # pool of all found model names from the whole application
       def models_pool
-        excluded = (excluded_models.collect(&:to_s) + %w(RailsAdmin::History PaperTrail::Version PaperTrail::VersionAssociation))
+        excluded =
+          excluded_models.collect(&:to_s) + \
+          %w(RailsAdmin::History
+             PaperTrail::Version
+             PaperTrail::VersionAssociation)
 
         (viable_models - excluded).uniq.sort
       end
@@ -221,17 +226,17 @@ module RailsAdmin
       #
       # @see RailsAdmin::Config.registry
       def model(entity, &block)
-        key = begin
-          if entity.is_a?(RailsAdmin::AbstractModel)
-            entity.model.try(:name).try :to_sym
-          elsif entity.is_a?(Class)
-            entity.name.to_sym
-          elsif entity.is_a?(String) || entity.is_a?(Symbol)
+        key =
+          case entity
+          when RailsAdmin::AbstractModel
+            entity.model_name.to_sym
+          when String, Symbol
             entity.to_sym
+          when Class
+            entity.name.to_sym
           else
             entity.class.name.to_sym
           end
-        end
 
         @registry[key] ||= RailsAdmin::Config::LazyModel.new(entity)
         @registry[key].add_deferred_block(&block) if block
@@ -239,13 +244,15 @@ module RailsAdmin
       end
 
       def default_hidden_fields=(fields)
-        if fields.is_a?(Array)
-          @default_hidden_fields = {}
-          @default_hidden_fields[:edit] = fields
-          @default_hidden_fields[:show] = fields
-        else
-          @default_hidden_fields = fields
-        end
+        @default_hidden_fields =
+          if fields.is_a?(Array)
+            {
+              edit: fields,
+              show: fields
+            }
+          else
+            fields
+          end
       end
 
       # Returns action configuration object

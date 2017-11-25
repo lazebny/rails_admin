@@ -1,6 +1,7 @@
 require 'rails_admin/engine'
 require 'rails_admin/abstract_model'
 require 'rails_admin/config'
+require 'rails_admin/errors'
 require 'rails_admin/extension'
 require 'rails_admin/extensions/cancan'
 require 'rails_admin/extensions/cancancan'
@@ -9,6 +10,7 @@ require 'rails_admin/extensions/paper_trail'
 require 'rails_admin/extensions/history'
 require 'rails_admin/support/csv_converter'
 require 'rails_admin/support/hash_helper'
+require 'rails_admin/support/sanitize_params'
 require 'yaml'
 
 module RailsAdmin

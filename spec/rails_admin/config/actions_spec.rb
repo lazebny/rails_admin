@@ -3,7 +3,20 @@ require 'spec_helper'
 describe RailsAdmin::Config::Actions do
   describe 'default' do
     it 'is as before' do
-      expect(RailsAdmin::Config::Actions.all.collect(&:key)).to eq([:dashboard, :index, :show, :new, :edit, :export, :delete, :bulk_delete, :history_show, :history_index, :show_in_app])
+      action_keys = [
+        :dashboard,
+        :index,
+        :show,
+        :new,
+        :edit,
+        :export,
+        :delete,
+        :bulk_delete,
+        :history_show,
+        :history_index,
+        :show_in_app
+      ]
+      expect(RailsAdmin::Config::Actions.select.map(&:key)).to eq(action_keys)
     end
   end
 
@@ -72,7 +85,7 @@ describe RailsAdmin::Config::Actions do
         end
       end
 
-      expect(RailsAdmin::Config::Actions.all.collect(&:key)).to eq([:dashboard, :index])
+      expect(RailsAdmin::Config::Actions.select.map(&:key)).to eq([:dashboard, :index])
     end
 
     it 'restricts by scope' do
@@ -83,9 +96,12 @@ describe RailsAdmin::Config::Actions do
           member :custom_member
         end
       end
-      expect(RailsAdmin::Config::Actions.all(:root).collect(&:key)).to eq([:custom_root])
-      expect(RailsAdmin::Config::Actions.all(:collection).collect(&:key)).to eq([:custom_collection])
-      expect(RailsAdmin::Config::Actions.all(:member).collect(&:key)).to eq([:custom_member])
+      expect(RailsAdmin::Config::Actions.select(&:root?).collect(&:key))
+        .to eq([:custom_root])
+      expect(RailsAdmin::Config::Actions.select(&:collection?).collect(&:key))
+        .to eq([:custom_collection])
+      expect(RailsAdmin::Config::Actions.select(&:member?).collect(&:key))
+        .to eq([:custom_member])
     end
 
     it 'returns all visible actions passing binding if controller binding is given, and pass all actions if no' do
@@ -98,13 +114,16 @@ describe RailsAdmin::Config::Actions do
           end
         end
       end
-      expect(RailsAdmin::Config::Actions.all(:root).collect(&:custom_key)).to eq([:custom_root])
-      expect(RailsAdmin::Config::Actions.all(:root, controller: 'not_controller').collect(&:custom_key)).to eq([])
-      expect(RailsAdmin::Config::Actions.all(:root, controller: 'controller').collect(&:custom_key)).to eq([:custom_root])
+      expect(RailsAdmin::Config::Actions.select(&:root?).collect(&:custom_key)).to eq([:custom_root])
+      expect(RailsAdmin::Config::Actions.select(controller: 'not_controller', &:root?).collect(&:custom_key)).to eq([])
+      expect(RailsAdmin::Config::Actions.select(controller: 'controller', &:root?).collect(&:custom_key)).to eq([:custom_root])
     end
   end
 
   describe 'customized through DSL' do
+    def action_keys
+
+    end
     it 'adds the one asked' do
       RailsAdmin.config do |config|
         config.actions do
@@ -114,7 +133,7 @@ describe RailsAdmin::Config::Actions do
         end
       end
 
-      expect(RailsAdmin::Config::Actions.all.collect(&:key)).to eq([:dashboard, :index, :show])
+      expect(RailsAdmin::Config::Actions.select.map(&:key)).to eq([:dashboard, :index, :show])
     end
 
     it 'allows to customize the custom_key when customizing an existing action' do
@@ -125,8 +144,8 @@ describe RailsAdmin::Config::Actions do
           end
         end
       end
-      expect(RailsAdmin::Config::Actions.all.collect(&:custom_key)).to eq([:my_dashboard])
-      expect(RailsAdmin::Config::Actions.all.collect(&:key)).to eq([:dashboard])
+      expect(RailsAdmin::Config::Actions.select.map(&:custom_key)).to eq([:my_dashboard])
+      expect(RailsAdmin::Config::Actions.select.map(&:key)).to eq([:dashboard])
     end
 
     it 'allows to change the key and the custom_key when subclassing an existing action' do
@@ -137,9 +156,9 @@ describe RailsAdmin::Config::Actions do
           end
         end
       end
-      expect(RailsAdmin::Config::Actions.all.collect(&:custom_key)).to eq([:my_dashboard_custom_key])
-      expect(RailsAdmin::Config::Actions.all.collect(&:key)).to eq([:my_dashboard_key])
-      expect(RailsAdmin::Config::Actions.all.collect(&:class)).to eq([RailsAdmin::Config::Actions::Dashboard])
+      expect(RailsAdmin::Config::Actions.select.map(&:custom_key)).to eq([:my_dashboard_custom_key])
+      expect(RailsAdmin::Config::Actions.select.map(&:key)).to eq([:my_dashboard_key])
+      expect(RailsAdmin::Config::Actions.select.map(&:class)).to eq([RailsAdmin::Config::Actions::Dashboard])
     end
 
     it 'does not add the same custom_key twice' do
@@ -172,8 +191,8 @@ describe RailsAdmin::Config::Actions do
         end
       end
 
-      expect(RailsAdmin::Config::Actions.all.collect(&:custom_key)).to eq([:dashboard, :my_dashboard])
-      expect(RailsAdmin::Config::Actions.all.collect(&:key)).to eq([:dashboard, :dashboard])
+      expect(RailsAdmin::Config::Actions.select.map(&:custom_key)).to eq([:dashboard, :my_dashboard])
+      expect(RailsAdmin::Config::Actions.select.map(&:key)).to eq([:dashboard, :dashboard])
     end
   end
 end

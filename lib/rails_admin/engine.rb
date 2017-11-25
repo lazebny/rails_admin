@@ -12,7 +12,7 @@ module RailsAdmin
   class Engine < Rails::Engine
     isolate_namespace RailsAdmin
 
-    config.action_dispatch.rescue_responses['RailsAdmin::ActionNotAllowed'] = :forbidden
+    config.action_dispatch.rescue_responses['RailsAdmin::Errors::ActionNotAllowed'] = :forbidden
 
     initializer 'RailsAdmin precompile hook', group: :all do |app|
       app.config.assets.precompile += %w(

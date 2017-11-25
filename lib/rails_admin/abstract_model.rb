@@ -41,6 +41,17 @@ module RailsAdmin
       def reset_polymorphic_parents
         @@polymorphic_parents = {}
       end
+
+      def model_name_from_param(param)
+        param
+          .split('~')
+          .collect(&:camelize)
+          .join('::')
+      end
+
+      def from_param(param)
+        new(model_name_from_param(param))
+      end
     end
 
     def initialize(model_or_model_name)

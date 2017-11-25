@@ -1,4 +1,3 @@
-# encoding: utf-8
 require 'spec_helper'
 
 describe RailsAdmin::MainController, type: :controller do
@@ -73,41 +72,10 @@ describe RailsAdmin::MainController, type: :controller do
     end
   end
 
-  describe '#get_sort_hash' do
-    context 'options sortable is a hash' do
-      before do
-        RailsAdmin.config('Player') do
-          configure :team do
-            sortable do
-              :'team.name'
-            end
-          end
-        end
-      end
-
-      it 'returns the option with no changes' do
-        controller.params = {sort: 'team', model_name: 'players'}
-        expect(controller.send(:get_sort_hash, RailsAdmin.config(Player))).to eq(sort: :"team.name", sort_reverse: true)
-      end
-    end
-
-    it 'works with belongs_to associations with label method virtual' do
-      controller.params = {sort: 'parent_category', model_name: 'categories'}
-      expect(controller.send(:get_sort_hash, RailsAdmin.config(Category))).to eq(sort: 'categories.parent_category_id', sort_reverse: true)
-    end
-
-    context 'using mongoid, not supporting joins', mongoid: true do
-      it 'gives back the remote table with label name' do
-        controller.params = {sort: 'team', model_name: 'players'}
-        expect(controller.send(:get_sort_hash, RailsAdmin.config(Player))).to eq(sort: 'players.team_id', sort_reverse: true)
-      end
-    end
-
-    context 'using active_record, supporting joins', active_record: true do
-      it 'gives back the local column' do
-        controller.params = {sort: 'team', model_name: 'players'}
-        expect(controller.send(:get_sort_hash, RailsAdmin.config(Player))).to eq(sort: 'teams.name', sort_reverse: true)
-      end
+  describe '#to_model_name' do
+    it 'works with modules' do
+      expect(controller.send(:to_model_name, 'conversations~conversation'))
+        .to eq('Conversations::Conversation')
     end
   end
 
@@ -155,7 +123,7 @@ describe RailsAdmin::MainController, type: :controller do
     before do
       @team = FactoryGirl.create :team
       controller.params = {associated_collection: 'players', current_action: 'update', source_abstract_model: 'team', source_object_id: @team.id, model_name: 'player', action: 'index'}
-      controller.get_model # set @model_config for Team
+      controller.send(:get_model) # set @model_config for Team
     end
 
     it "doesn't scope associated collection records when associated_collection_scope is nil" do
@@ -230,27 +198,6 @@ describe RailsAdmin::MainController, type: :controller do
       @players = FactoryGirl.create_list(:player, 3)
 
       expect(controller.list_entries.to_a).to eq(@players.sort_by(&:id).reverse)
-    end
-  end
-
-  describe '#get_collection' do
-    before do
-      @team = FactoryGirl.create(:team)
-      controller.params = {model_name: 'teams'}
-      RailsAdmin.config Team do
-        field :players do
-          eager_load true
-        end
-      end
-      @model_config = RailsAdmin.config(Team)
-    end
-
-    it 'performs eager-loading for an association field with `eagar_load true`' do
-      scope = double('scope')
-      abstract_model = @model_config.abstract_model
-      allow(@model_config).to receive(:abstract_model).and_return(abstract_model)
-      expect(abstract_model).to receive(:all).with(hash_including(include: [:players]), scope).once
-      controller.send(:get_collection, @model_config, scope, false)
     end
   end
 
@@ -422,11 +369,47 @@ describe RailsAdmin::MainController, type: :controller do
           'commentable_type' => 'test',
         },
       )
-      controller.send(:sanitize_params_for!, :create, RailsAdmin.config(Comment), controller.params['comment'])
+      controller.send(:sanitize_params_for!,
+                      :create,
+                      RailsAdmin.config(Comment),
+                      controller.params['comment'])
       expect(controller.params[:comment].to_h).to eq(
         'commentable_id' => 'test',
         'commentable_type' => 'test',
       )
+    end
+  end
+
+  describe 'helper method _get_plugin_name' do
+    it 'works by default' do
+      expect(controller.send(:_get_plugin_name)).to eq(['Dummy App', 'Admin'])
+    end
+
+    it 'works for static names' do
+      RailsAdmin.config do |config|
+        config.main_app_name = %w(static value)
+      end
+      expect(controller.send(:_get_plugin_name)).to eq(%w(static value))
+    end
+
+    it 'works for dynamic names in the controller context' do
+      RailsAdmin.config do |config|
+        config.main_app_name = proc { |controller| [Rails.application.engine_name.try(:titleize), controller.params[:action].titleize] }
+      end
+      controller.params[:action] = 'dashboard'
+      expect(controller.send(:_get_plugin_name)).to eq(['Dummy App Application', 'Dashboard'])
+    end
+  end
+
+  describe '#_current_user' do
+    it 'is public' do
+      expect { controller._current_user }.not_to raise_error
+    end
+  end
+
+  describe '#rails_admin_controller?' do
+    it 'returns true' do
+      expect(controller.send(:rails_admin_controller?)).to be true
     end
   end
 end

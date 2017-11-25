@@ -14,7 +14,8 @@ describe 'RailsAdmin Config Action DSL', type: :request do
           end
         end
       end
-      expect { visit index_path(model_name: 'field_test') }.to raise_error 'RailsAdmin::ActionNotAllowed'
+      expect { visit index_path(model_name: 'field_test') }
+        .to raise_error 'RailsAdmin::Errors::ActionNotAllowed'
     end
 
     describe 'in form action' do
