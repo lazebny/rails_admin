@@ -1,9 +1,15 @@
+
 # RailsAdmin Changelog
 
 ## [Unreleased](https://github.com/sferik/rails_admin/tree/HEAD)
 
 [Full Changelog](https://github.com/sferik/rails_admin/compare/v1.2.0...HEAD)
 
+### Refactored
+* replaced class_eval with define_method in MainController ([class_eval vs define_method](https://tenderlovemaking.com/2013/03/03/dynamic_method_definitions.html))
+* moved exceptions to separate module outside of MainController
+* removed view helpers from MainController, calls delegated to `view_context`
+* deprecated `Actions.all` with symbol, created `Actions.select` with block
 
 ## [1.2.0](https://github.com/sferik/rails_admin/tree/v1.2.0) - 2017-05-31
 

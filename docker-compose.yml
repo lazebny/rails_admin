@@ -1,0 +1,14 @@
+app:
+  container_name: rails_admin_app
+  build: .
+  dockerfile: Dockerfile
+  volumes:
+    - .:/srv/app
+  volumes_from:
+    - bundle_cache
+
+bundle_cache:
+  container_name: rails_admin_bundle_cache
+  image: busybox
+  volumes:
+    - /bundle_cache
