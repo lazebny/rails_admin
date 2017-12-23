@@ -2,6 +2,7 @@ module RailsAdmin
   class MainController < RailsAdmin::ApplicationController
     layout :get_layout
 
+    before_action :get_app_presenter
     before_action :get_model, except: RailsAdmin::Config::Actions.select(&:root?).map(&:action_name)
     before_action :get_object, only: RailsAdmin::Config::Actions.select(&:member?).map(&:action_name)
     before_action :check_for_cancel
@@ -163,6 +164,10 @@ module RailsAdmin
         .detect { |f| f.name == params[:associated_collection].to_sym }
         .with(controller: self, object: source_object)
       @association.associated_collection_scope
+    end
+
+    def get_app_presenter
+      @app_presenter ||= ::RailsAdmin::AppPresenter.new(self)
     end
   end
 end

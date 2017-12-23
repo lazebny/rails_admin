@@ -2,11 +2,11 @@ module RailsAdmin
   class ApplicationController < Config.parent_controller.constantize
     protect_from_forgery with: :exception
 
-    before_action { instance_eval(&RailsAdmin::Config.authenticate_with) }
-    before_action { instance_eval(&RailsAdmin::Config.authorize_with) }
-    before_action { instance_eval(&RailsAdmin::Config.audit_with) }
+    before_action { instance_eval &RailsAdmin::Config.authenticate_with }
+    before_action { instance_eval &RailsAdmin::Config.authorize_with }
+    before_action { instance_eval &RailsAdmin::Config.audit_with }
 
-    helper_method :_current_user, :_get_plugin_name
+    helper_method :_current_user
 
     attr_reader :authorization_adapter
 
@@ -27,14 +27,6 @@ module RailsAdmin
     end
 
   private
-
-    def _get_plugin_name
-      @plugin_name_array ||=
-        begin
-          name = RailsAdmin.config.main_app_name
-          Array(name.is_a?(Proc) ? instance_eval(&name) : name)
-        end
-    end
 
     def rails_admin_controller?
       true
