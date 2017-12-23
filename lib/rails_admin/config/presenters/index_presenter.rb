@@ -87,13 +87,6 @@ module RailsAdmin
           @config.model(@abstract_model.model_name).description
         end
 
-        def export_action
-          bindings = {
-            controller: @view_context.controller,
-            abstract_model: @abstract_model
-          }
-          @actions.find(:export, bindings)
-        end
 
         def export_params
           params.except(:set, :page)
@@ -126,6 +119,25 @@ module RailsAdmin
             .except(:sort_reverse, :page)
             .merge(sort: sort)
             .merge(reverse_params)
+        end
+
+        ### Actions
+
+        def bulk_actions
+          bindings = {
+            controller: @view_context.controller,
+            abstract_model: @abstract_model,
+            object: nil
+          }
+          @actions.select_visible(bindings, &:bulkable?)
+        end
+
+        def export_action
+          bindings = {
+            controller: @view_context.controller,
+            abstract_model: @abstract_model
+          }
+          @actions.find_visible(:export, bindings)
         end
 
         private

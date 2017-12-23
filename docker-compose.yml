@@ -6,6 +6,8 @@ app:
     - .:/srv/app
   volumes_from:
     - bundle_cache
+  ports:
+    - 3000:3000
 
 bundle_cache:
   container_name: rails_admin_bundle_cache

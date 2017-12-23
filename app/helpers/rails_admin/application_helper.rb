@@ -24,7 +24,12 @@ module RailsAdmin
     end
 
     def action(key, abstract_model = nil, object = nil)
-      RailsAdmin::Config::Actions.find(key, controller: controller, abstract_model: abstract_model, object: object)
+      bindings = {
+        controller: controller,
+        abstract_model: abstract_model,
+        object: object
+      }
+      RailsAdmin::Config::Actions.find_visible(key, bindings)
     end
 
     def actions(scope = nil, abstract_model = nil, object = nil)
@@ -35,36 +40,10 @@ module RailsAdmin
       }
 
       if scope.nil? || scope == :all
-        RailsAdmin::Config::Actions.select(bindings)
+        RailsAdmin::Config::Actions.select_visible(bindings)
       else
-        RailsAdmin::Config::Actions.select(bindings, &:"#{scope}?")
+        RailsAdmin::Config::Actions.select_visible(bindings, &:"#{scope}?")
       end
-    end
-
-    def edit_user_link
-      return nil unless _current_user.respond_to?(:email)
-      return nil unless abstract_model = RailsAdmin.config(_current_user.class).abstract_model
-      return nil unless (edit_action = RailsAdmin::Config::Actions.find(:edit, controller: controller, abstract_model: abstract_model, object: _current_user)).try(:authorized?)
-      link_to rails_admin.url_for(action: edit_action.action_name, model_name: abstract_model.to_param, id: _current_user.id, controller: 'rails_admin/main') do
-        html = []
-        html << image_tag("#{(request.ssl? ? 'https://secure' : 'http://www')}.gravatar.com/avatar/#{Digest::MD5.hexdigest _current_user.email}?s=30", alt: '') if RailsAdmin::Config.show_gravatar && _current_user.email.present?
-        html << content_tag(:span, _current_user.email)
-        html.join.html_safe
-      end
-    end
-
-    def logout_path
-      if defined?(Devise)
-        scope = Devise::Mapping.find_scope!(_current_user)
-        main_app.send("destroy_#{scope}_session_path") rescue false
-      elsif main_app.respond_to?(:logout_path)
-        main_app.logout_path
-      end
-    end
-
-    def logout_method
-      return [Devise.sign_out_via].flatten.first if defined?(Devise)
-      :delete
     end
 
     def wording_for(label, action = @action, abstract_model = @abstract_model, object = @object)
@@ -162,19 +141,12 @@ module RailsAdmin
       end.join.html_safe
     end
 
+    # FIXME: Deprecated
     def bulk_menu(abstract_model = @abstract_model)
-      actions = actions(:bulkable, abstract_model)
-      return '' if actions.empty?
-      content_tag :li, class: 'dropdown', style: 'float:right' do
-        content_tag(:a, class: 'dropdown-toggle', data: {toggle: 'dropdown'}, href: '#') { t('admin.misc.bulk_menu_title').html_safe + ' ' + '<b class="caret"></b>'.html_safe } +
-          content_tag(:ul, class: 'dropdown-menu', style: 'left:auto; right:0;') do
-            actions.collect do |action|
-              content_tag :li do
-                link_to wording_for(:bulk_link, action), '#', onclick: "jQuery('#bulk_action').val('#{action.action_name}'); jQuery('#bulk_form').submit(); return false;"
-              end
-            end.join.html_safe
-          end
-      end.html_safe
+      locals = {
+        actions: actions(:bulkable, abstract_model)
+      }
+      render partial: 'rails_admin/main/index/bulk_menu', locals: locals
     end
 
     def flash_alert_class(flash_key)

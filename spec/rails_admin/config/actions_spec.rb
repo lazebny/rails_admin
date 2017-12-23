@@ -54,8 +54,8 @@ describe RailsAdmin::Config::Actions do
         end
       end
       expect(RailsAdmin::Config::Actions.find(:custom_root)).to be_a(RailsAdmin::Config::Actions::Base)
-      expect(RailsAdmin::Config::Actions.find(:custom_root, controller: 'not_controller')).to be_nil
-      expect(RailsAdmin::Config::Actions.find(:custom_root, controller: 'controller')).to be_a(RailsAdmin::Config::Actions::Base)
+      expect(RailsAdmin::Config::Actions.find_visible(:custom_root, controller: 'not_controller')).to be_nil
+      expect(RailsAdmin::Config::Actions.find_visible(:custom_root, controller: 'controller')).to be_a(RailsAdmin::Config::Actions::Base)
     end
 
     it "ignores bindings[:abstract_model] visibility while checking action\'s visibility" do
@@ -63,16 +63,16 @@ describe RailsAdmin::Config::Actions do
         hide
       end
 
-      expect(RailsAdmin::Config::Actions.find(:index, controller: double(authorized?: true), abstract_model: RailsAdmin::AbstractModel.new(Comment))).to be_a(RailsAdmin::Config::Actions::Index) # decoy
-      expect(RailsAdmin::Config::Actions.find(:index, controller: double(authorized?: true), abstract_model: RailsAdmin::AbstractModel.new(Team))).to be_a(RailsAdmin::Config::Actions::Index)
+      expect(RailsAdmin::Config::Actions.find_visible(:index, controller: double(authorized?: true), abstract_model: RailsAdmin::AbstractModel.new(Comment))).to be_a(RailsAdmin::Config::Actions::Index) # decoy
+      expect(RailsAdmin::Config::Actions.find_visible(:index, controller: double(authorized?: true), abstract_model: RailsAdmin::AbstractModel.new(Team))).to be_a(RailsAdmin::Config::Actions::Index)
     end
 
     it "checks bindings[:abstract_model] presence while checking action\'s visibility" do
       RailsAdmin.config do |config|
         config.excluded_models << Team
       end
-      expect(RailsAdmin::Config::Actions.find(:index, controller: double(authorized?: true), abstract_model: RailsAdmin::AbstractModel.new(Comment))).to be_a(RailsAdmin::Config::Actions::Index) # decoy
-      expect(RailsAdmin::Config::Actions.find(:index, controller: double(authorized?: true), abstract_model: RailsAdmin::AbstractModel.new(Team))).to be_nil
+      expect(RailsAdmin::Config::Actions.find_visible(:index, controller: double(authorized?: true), abstract_model: RailsAdmin::AbstractModel.new(Comment))).to be_a(RailsAdmin::Config::Actions::Index) # decoy
+      expect(RailsAdmin::Config::Actions.find_visible(:index, controller: double(authorized?: true), abstract_model: RailsAdmin::AbstractModel.new(Team))).to be_nil
     end
   end
 
@@ -115,8 +115,8 @@ describe RailsAdmin::Config::Actions do
         end
       end
       expect(RailsAdmin::Config::Actions.select(&:root?).collect(&:custom_key)).to eq([:custom_root])
-      expect(RailsAdmin::Config::Actions.select(controller: 'not_controller', &:root?).collect(&:custom_key)).to eq([])
-      expect(RailsAdmin::Config::Actions.select(controller: 'controller', &:root?).collect(&:custom_key)).to eq([:custom_root])
+      expect(RailsAdmin::Config::Actions.select_visible(controller: 'not_controller', &:root?).collect(&:custom_key)).to eq([])
+      expect(RailsAdmin::Config::Actions.select_visible(controller: 'controller', &:root?).collect(&:custom_key)).to eq([:custom_root])
     end
   end
 

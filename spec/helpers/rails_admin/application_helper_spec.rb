@@ -110,21 +110,6 @@ describe RailsAdmin::ApplicationHelper, type: :helper do
       end
     end
 
-    describe '#logout_method' do
-      it 'defaults to :delete when Devise is not defined' do
-        allow(Object).to receive(:defined?).with(Devise).and_return(false)
-
-        expect(helper.logout_method).to eq(:delete)
-      end
-
-      it 'uses first sign out method from Devise when it is defined' do
-        allow(Object).to receive(:defined?).with(Devise).and_return(true)
-
-        expect(Devise).to receive(:sign_out_via).and_return([:whatever_defined_on_devise, :something_ignored])
-        expect(helper.logout_method).to eq(:whatever_defined_on_devise)
-      end
-    end
-
     describe '#wording_for' do
       it 'gives correct wording even if action is not visible' do
         RailsAdmin.config do |config|
@@ -159,7 +144,10 @@ describe RailsAdmin::ApplicationHelper, type: :helper do
 
     describe '#breadcrumb' do
       it 'gives us a breadcrumb' do
-        @action = RailsAdmin::Config::Actions.find(:edit, abstract_model: RailsAdmin::AbstractModel.new(Team), object: FactoryGirl.create(:team, name: 'the avengers'))
+        @action = RailsAdmin::Config::Actions
+          .find_visible(:edit,
+                         abstract_model: RailsAdmin::AbstractModel.new(Team),
+                         object: FactoryGirl.create(:team, name: 'the avengers'))
         bc = helper.breadcrumb
         expect(bc).to match(/Dashboard/) # dashboard
         expect(bc).to match(/Teams/) # list
@@ -361,36 +349,6 @@ describe RailsAdmin::ApplicationHelper, type: :helper do
         expect(result).to match('blub')
 
         expect(helper.bulk_menu(RailsAdmin::AbstractModel.new(Player))).not_to match('blub')
-      end
-    end
-
-    describe '#edit_user_link' do
-      it "don't include email column" do
-        allow(helper).to receive(:_current_user).and_return(FactoryGirl.create(:player))
-        result = helper.edit_user_link
-        expect(result).to eq nil
-      end
-
-      it 'include email column' do
-        allow(helper).to receive(:_current_user).and_return(FactoryGirl.create(:user))
-        result = helper.edit_user_link
-        expect(result).to match('href')
-      end
-
-      it 'show gravatar' do
-        allow(helper).to receive(:_current_user).and_return(FactoryGirl.create(:user))
-        result = helper.edit_user_link
-        expect(result).to include('gravatar')
-      end
-
-      it "don't show gravatar" do
-        RailsAdmin.config do |config|
-          config.show_gravatar = false
-        end
-
-        allow(helper).to receive(:_current_user).and_return(FactoryGirl.create(:user))
-        result = helper.edit_user_link
-        expect(result).not_to include('gravatar')
       end
     end
   end

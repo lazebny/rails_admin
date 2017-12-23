@@ -1,4 +1,5 @@
 require 'rails_admin/engine'
+require 'rails_admin/support/file_helper'
 require 'rails_admin/abstract_model'
 require 'rails_admin/config'
 require 'rails_admin/errors'

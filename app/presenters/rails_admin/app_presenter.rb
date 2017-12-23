@@ -1,9 +1,15 @@
 module RailsAdmin
   class AppPresenter
-    def initialize(ctrl)
-      @ctrl = ctrl
+    def initialize(controller, view_context)
+      @controller = controller
+      @view_context = view_context
       @config = ::RailsAdmin.config
     end
+
+    delegate :edit_user_link,
+             :logout_method,
+             :logout_path,
+             to: :user_presenter
 
     def plugin_full_name
       [plugin_first_name, plugin_last_name].join(' ')
@@ -30,10 +36,18 @@ module RailsAdmin
         when ::Array
           @config.main_app_name
         when ::Proc
-          Array(@ctrl.instance_eval(&@config.main_app_name))
+          Array(@controller.instance_eval(&@config.main_app_name))
         else
           Array(@config.main_app_name)
         end
+    end
+
+    def user_presenter
+      @user_presenter ||= RailsAdmin::UserPresenter.new(current_user, @controller, @view_context)
+    end
+
+    def current_user
+      @controller._current_user
     end
   end
 end

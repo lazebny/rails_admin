@@ -16,7 +16,8 @@
 
 - content_for :contextual_tabs do
   - if @presenter.checkboxes?
-    = bulk_menu
+    = render partial: 'rails_admin/main/index/bulk_menu',
+             locals: { actions: @presenter.bulk_actions }
   - if filterable_fields.present?
     %li.dropdown{style: 'float:right'}
       %a.dropdown-toggle{href: '#', :'data-toggle' => "dropdown"}

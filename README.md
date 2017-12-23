@@ -94,6 +94,15 @@ list][list].
 
 If you think you found a bug in RailsAdmin, you can [submit an issue](https://github.com/sferik/rails_admin/issues/new).
 
+Contributing:
+
+Start rails server in test env
+
+```sh
+export BUNDLE_GEMFILE=../../gemfiles/rails_4.2.gemfile
+RAILS_ENV=test bundle exec rails s
+```
+
 ## Supported Ruby Versions
 This library aims to support and is [tested against][travis] the following Ruby implementations:
 

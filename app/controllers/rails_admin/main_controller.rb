@@ -45,12 +45,12 @@ module RailsAdmin
     end
 
     def bulk_action
-      action_names =
-        RailsAdmin::Config::Actions
-        .select(controller: self, abstract_model: @abstract_model, &:bulkable?)
-        .collect(&:route_fragment)
+      return unless RailsAdmin::Config::Actions
+                    .select_visible(controller: self, abstract_model: @abstract_model, &:bulkable?)
+                    .collect(&:route_fragment)
+                    .include?(params[:bulk_action])
 
-      send(params[:bulk_action]) if params[:bulk_action].in?(action_names)
+      public_send(params[:bulk_action])
     end
 
     # OTHER -------------------------------------------------------------------
@@ -164,10 +164,6 @@ module RailsAdmin
         .detect { |f| f.name == params[:associated_collection].to_sym }
         .with(controller: self, object: source_object)
       @association.associated_collection_scope
-    end
-
-    def get_app_presenter
-      @app_presenter ||= ::RailsAdmin::AppPresenter.new(self)
     end
   end
 end

@@ -2,7 +2,8 @@ require 'spec_helper'
 
 describe RailsAdmin::AppPresenter do
   let(:controller) { OpenStruct.new }
-  let(:presenter) { described_class.new(controller) }
+  let(:view_context) { OpenStruct.new }
+  let(:presenter) { described_class.new(controller, view_context) }
 
   describe '#plugin_name' do
     it 'works by default' do

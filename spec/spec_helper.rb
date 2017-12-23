@@ -59,12 +59,11 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  config.include Capybara::DSL, type: :request
+  config.include FactoryGirl::Syntax::Methods
   config.include RSpec::Matchers
   config.include RailsAdmin::Engine.routes.url_helpers
-
   config.include Warden::Test::Helpers
-
-  config.include Capybara::DSL, type: :request
 
   config.before do |example|
     DatabaseCleaner.strategy = (CI_ORM == :mongoid || example.metadata[:js]) ? :truncation : :transaction

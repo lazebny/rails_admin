@@ -2,6 +2,7 @@ module RailsAdmin
   module Config
     module Actions
       class << self
+        # Deprecated
         def all(scope = :all, bindings = {})
           ActiveSupport::Deprecation.warn(
             "Method 'all' is deprecated and will be removed in Rails Admin major release.")
@@ -18,25 +19,26 @@ module RailsAdmin
           end
         end
 
-        def select(bindings = {}, &scope)
-          init_actions!
+        def select(&scope)
+          return actions.values.select(&scope) if block_given?
 
-          actions =
-            if block_given?
-              @@actions.values.select(&scope)
-            else
-              @@actions.values
-            end
-
-          return actions if bindings.empty?
-
-          actions = actions.map { |action| action.with(bindings) }
-          bindings[:controller] ? actions.select(&:visible?) : actions
+          actions.values
         end
 
-        def find(custom_key, bindings = {})
-          init_actions!
-          action = @@actions[custom_key]
+        def select_visible(bindings, &scope)
+          lactions = select(&scope).map { |action| action.with(bindings) }
+
+          return lactions unless bindings[:controller]
+
+          lactions.select(&:visible?)
+        end
+
+        def find(action_name)
+          actions[action_name]
+        end
+
+        def find_visible(action_name, bindings = {})
+          action = find(action_name)
 
           return if action.nil?
 
@@ -82,7 +84,7 @@ module RailsAdmin
 
       private
 
-        def init_actions!
+        def actions
           @@actions ||= {
             dashboard: Dashboard.new,
             index: Index.new,
@@ -99,12 +101,14 @@ module RailsAdmin
         end
 
         def add_action_custom_key(action, &block)
-          action.instance_eval(&block) if block_given?
           @@actions ||= {}
-          if @@actions.key?(action.custom_key)
+
+          action.instance_eval(&block) if block_given?
+
+          if actions.key?(action.custom_key)
             raise ::RailsAdmin::Errors::ActionAlreadyRegistred, action
           else
-            @@actions[action.custom_key] = action
+            actions[action.custom_key] = action
           end
         end
       end
@@ -112,15 +116,5 @@ module RailsAdmin
   end
 end
 
-require 'rails_admin/config/actions/base'
-require 'rails_admin/config/actions/dashboard'
-require 'rails_admin/config/actions/index'
-require 'rails_admin/config/actions/show'
-require 'rails_admin/config/actions/show_in_app'
-require 'rails_admin/config/actions/history_show'
-require 'rails_admin/config/actions/history_index'
-require 'rails_admin/config/actions/new'
-require 'rails_admin/config/actions/edit'
-require 'rails_admin/config/actions/export'
-require 'rails_admin/config/actions/delete'
-require 'rails_admin/config/actions/bulk_delete'
+RailsAdmin::Support::FileHelper.require_relative(__FILE__, 'actions', 'base.rb')
+RailsAdmin::Support::FileHelper.require_relative(__FILE__, 'actions', '*.rb')
