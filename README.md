@@ -103,6 +103,13 @@ export BUNDLE_GEMFILE=../../gemfiles/rails_4.2.gemfile
 RAILS_ENV=test bundle exec rails s
 ```
 
+Run tests
+
+```sh
+export BUNDLE_GEMFILE=gemfiles/rails_4.2.gemfile
+bundle exec rspec
+```
+
 ## Supported Ruby Versions
 This library aims to support and is [tested against][travis] the following Ruby implementations:
 

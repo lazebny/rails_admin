@@ -93,6 +93,10 @@ module RailsAdmin
           [:get]
         end
 
+        def http_method_get?
+          http_methods.include?(:get)
+        end
+
         # Url fragment
         register_instance_option :route_fragment do
           custom_key.to_s

@@ -1,7 +1,7 @@
 module RailsAdmin
   class AppPresenter
-    def initialize(controller, view_context)
-      @controller = controller
+    def initialize(view_context)
+      @controller = view_context.controller
       @view_context = view_context
       @config = ::RailsAdmin.config
     end
@@ -10,6 +10,12 @@ module RailsAdmin
              :logout_method,
              :logout_path,
              to: :user_presenter
+
+    delegate :main_navigation,
+             :static_navigation?,
+             :static_navigation_label,
+             :static_navigation_links,
+             to: :navigation_presenter
 
     def plugin_full_name
       [plugin_first_name, plugin_last_name].join(' ')
@@ -44,6 +50,10 @@ module RailsAdmin
 
     def user_presenter
       @user_presenter ||= RailsAdmin::UserPresenter.new(current_user, @controller, @view_context)
+    end
+
+    def navigation_presenter
+      @navigation_presenter ||= RailsAdmin::NavigationPresenter.new(@view_context)
     end
 
     def current_user

@@ -1,2 +1,8 @@
 %ul.nav.nav-pills.nav-stacked= main_navigation
-%ul.nav.nav-pills.nav-stacked= static_navigation
+
+- if @app_presenter.static_navigation?
+  %ul.nav.nav-pills.nav-stacked
+    %li.dropdown-header= @app_presenter.static_navigation_label
+    - @app_presenter.static_navigation_links.each do |title, url|
+      %li= link_to(title.to_s, url, target: '_blank')
+

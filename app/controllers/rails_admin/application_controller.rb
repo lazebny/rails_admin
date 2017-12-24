@@ -34,7 +34,7 @@ module RailsAdmin
     end
 
     def get_app_presenter
-      @app_presenter ||= ::RailsAdmin::AppPresenter.new(self, view_context)
+      @app_presenter ||= ::RailsAdmin::AppPresenter.new(view_context)
     end
   end
 end

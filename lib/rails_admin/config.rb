@@ -311,8 +311,12 @@ module RailsAdmin
       #
       # @see RailsAdmin::Config::Hideable
 
-      def visible_models(bindings)
-        visible_models_with_bindings(bindings).sort do |a, b|
+      def visible_models(bindings, sorted: true)
+        models = visible_models_with_bindings(bindings)
+
+        return models unless sorted
+
+        models.sort do |a, b|
           if (weight_order = a.weight <=> b.weight) == 0
             a.label.downcase <=> b.label.downcase
           else

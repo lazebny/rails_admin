@@ -60,40 +60,9 @@ module RailsAdmin
     end
 
     def main_navigation
-      nodes_stack = RailsAdmin::Config.visible_models(controller: controller)
-      node_model_names = nodes_stack.collect { |c| c.abstract_model.model_name }
+      # @app_presenter.main_navigation
 
-      nodes_stack.group_by(&:navigation_label).collect do |navigation_label, nodes|
-        nodes = nodes.select { |n| n.parent.nil? || !n.parent.to_s.in?(node_model_names) }
-        li_stack = navigation nodes_stack, nodes
-
-        label = navigation_label || t('admin.misc.navigation')
-
-        %(<li class='dropdown-header'>#{capitalize_first_letter label}</li>#{li_stack}) if li_stack.present?
-      end.join.html_safe
-    end
-
-    def static_navigation
-      li_stack = RailsAdmin::Config.navigation_static_links.collect do |title, url|
-        content_tag(:li, link_to(title.to_s, url, target: '_blank'))
-      end.join
-
-      label = RailsAdmin::Config.navigation_static_label || t('admin.misc.navigation_static_label')
-      li_stack = %(<li class='dropdown-header'>#{label}</li>#{li_stack}).html_safe if li_stack.present?
-      li_stack
-    end
-
-    def navigation(nodes_stack, nodes, level = 0)
-      nodes.collect do |node|
-        model_param = node.abstract_model.to_param
-        url         = rails_admin.url_for(action: :index, controller: 'rails_admin/main', model_name: model_param)
-        level_class = " nav-level-#{level}" if level > 0
-        nav_icon = node.navigation_icon ? %(<i class="#{node.navigation_icon}"></i>).html_safe : ''
-        li = content_tag :li, data: {model: model_param} do
-          link_to nav_icon + capitalize_first_letter(node.label_plural), url, class: "pjax#{level_class}"
-        end
-        li + navigation(nodes_stack, nodes_stack.select { |n| n.parent.to_s == node.abstract_model.model_name }, level + 1)
-      end.join.html_safe
+      ::RailsAdmin::NavigationPresenter.new(self).main_navigation
     end
 
     def breadcrumb(action = @action, _acc = [])
@@ -127,8 +96,9 @@ module RailsAdmin
 
     # parent => :root, :collection, :member
     def menu_for(parent, abstract_model = nil, object = nil, only_icon = false) # perf matters here (no action view trickery)
-      actions = actions(parent, abstract_model, object).select { |a| a.http_methods.include?(:get) }
-      actions.collect do |action|
+      actions(parent, abstract_model, object)
+        .select(&:http_method_get?)
+        .map do |action|
         wording = wording_for(:menu, action)
         %(
           <li title="#{wording if only_icon}" rel="#{'tooltip' if only_icon}" class="icon #{action.key}_#{parent}_link #{'active' if current_action?(action)}">

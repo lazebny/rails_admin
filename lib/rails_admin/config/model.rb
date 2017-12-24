@@ -27,20 +27,26 @@ module RailsAdmin
 
       NAMED_INSTANCE_VARIABLES = [:@parent, :@root].freeze
 
+      delegate :model_name,
+               to: :abstract_model, prefix: :abstract
+
       def initialize(entity)
+        @abstract_model =
+          case entity
+          when ::RailsAdmin::AbstractModel
+            entity
+          when Class, String, Symbol
+            ::RailsAdmin::AbstractModel.new(entity)
+          else
+            ::RailsAdmin::AbstractModel.new(entity.class)
+          end
+        @groups = [
+          RailsAdmin::Config::Fields::Group.new(self, :default).tap do |g|
+            g.label { I18n.translate('admin.form.basic_info') }
+          end
+        ]
         @parent = nil
         @root = self
-
-        @abstract_model = begin
-          if entity.is_a?(RailsAdmin::AbstractModel)
-            entity
-          elsif entity.is_a?(Class) || entity.is_a?(String) || entity.is_a?(Symbol)
-            RailsAdmin::AbstractModel.new(entity)
-          else
-            RailsAdmin::AbstractModel.new(entity.class)
-          end
-        end
-        @groups = [RailsAdmin::Config::Fields::Group.new(self, :default).tap { |g| g.label { I18n.translate('admin.form.basic_info') } }]
       end
 
       def excluded?
@@ -50,6 +56,10 @@ module RailsAdmin
       def object_label
         bindings[:object].send(object_label_method).presence ||
           bindings[:object].send(:rails_admin_default_object_label_method)
+      end
+
+      def parent_for?(other)
+        abstract_model.model_name == other.parent.to_s
       end
 
       # The display for a model instance (i.e. a single database record).
