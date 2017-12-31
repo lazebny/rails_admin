@@ -2,7 +2,6 @@ module RailsAdmin
   class MainController < RailsAdmin::ApplicationController
     layout :get_layout
 
-    before_action :get_app_presenter
     before_action :get_model, except: RailsAdmin::Config::Actions.select(&:root?).map(&:action_name)
     before_action :get_object, only: RailsAdmin::Config::Actions.select(&:member?).map(&:action_name)
     before_action :check_for_cancel

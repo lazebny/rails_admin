@@ -32,10 +32,13 @@ describe RailsAdmin::ApplicationHelper, type: :helper do
 
     describe '#current_action?' do
       it 'returns true if current_action, false otherwise' do
-        @action = RailsAdmin::Config::Actions.find(:index)
+        current_action = RailsAdmin::Config::Actions.find(:index)
+        actual = helper.current_action?(current_action, current_action)
+        expect(actual).to be_truthy
 
-        expect(helper.current_action?(RailsAdmin::Config::Actions.find(:index))).to be_truthy
-        expect(helper.current_action?(RailsAdmin::Config::Actions.find(:show))).not_to be_truthy
+        other_action = RailsAdmin::Config::Actions.find(:show)
+        actual = helper.current_action?(other_action, current_action)
+        expect(actual).not_to be_truthy
       end
     end
 
@@ -142,20 +145,6 @@ describe RailsAdmin::ApplicationHelper, type: :helper do
       end
     end
 
-    describe '#breadcrumb' do
-      it 'gives us a breadcrumb' do
-        @action = RailsAdmin::Config::Actions
-          .find_visible(:edit,
-                         abstract_model: RailsAdmin::AbstractModel.new(Team),
-                         object: FactoryGirl.create(:team, name: 'the avengers'))
-        bc = helper.breadcrumb
-        expect(bc).to match(/Dashboard/) # dashboard
-        expect(bc).to match(/Teams/) # list
-        expect(bc).to match(/The avengers/) # show
-        expect(bc).to match(/Edit/) # current (edit)
-      end
-    end
-
     describe '#menu_for' do
       it 'passes model and object as bindings and generates a menu, excluding non-get actions' do
         RailsAdmin.config do |config|
@@ -202,153 +191,6 @@ describe RailsAdmin::ApplicationHelper, type: :helper do
 
         @action = RailsAdmin::Config::Actions.find :dashboard
         expect(helper.menu_for(:root)).not_to match(/Dashboard/)
-      end
-    end
-
-    describe '#main_navigation' do
-      it 'shows included models' do
-        RailsAdmin.config do |config|
-          config.included_models = [Ball, Comment]
-        end
-        expect(helper.main_navigation).to match(/(dropdown-header).*(Navigation).*(Balls).*(Comments)/m)
-      end
-
-      it 'does not draw empty navigation labels' do
-        RailsAdmin.config do |config|
-          config.included_models = [Ball, Comment, Comment::Confirmed]
-          config.model Comment do
-            navigation_label 'Commentz'
-          end
-          config.model Comment::Confirmed do
-            label_plural 'Confirmed'
-          end
-        end
-        expect(helper.main_navigation).to match(/(dropdown-header).*(Navigation).*(Balls).*(Commentz).*(Confirmed)/m)
-        expect(helper.main_navigation).not_to match(/(dropdown-header).*(Navigation).*(Balls).*(Commentz).*(Confirmed).*(Comment)/m)
-      end
-
-      it 'does not show unvisible models' do
-        RailsAdmin.config do |config|
-          config.included_models = [Ball, Comment]
-          config.model Comment do
-            hide
-          end
-        end
-        result = helper.main_navigation
-        expect(result).to match(/(dropdown-header).*(Navigation).*(Balls)/m)
-        expect(result).not_to match('Comments')
-      end
-
-      it 'shows children of hidden models' do # https://github.com/sferik/rails_admin/issues/978
-        RailsAdmin.config do |config|
-          config.included_models = [Ball, Hardball]
-          config.model Ball do
-            hide
-          end
-        end
-        expect(helper.main_navigation).to match(/(dropdown\-header).*(Navigation).*(Hardballs)/m)
-      end
-
-      it 'shows children of excluded models' do
-        RailsAdmin.config do |config|
-          config.included_models = [Hardball]
-        end
-        expect(helper.main_navigation).to match(/(dropdown-header).*(Navigation).*(Hardballs)/m)
-      end
-
-      it 'nests in navigation label' do
-        RailsAdmin.config do |config|
-          config.included_models = [Comment]
-          config.model Comment do
-            navigation_label 'commentable'
-          end
-        end
-        expect(helper.main_navigation).to match(/(dropdown\-header).*(Commentable).*(Comments)/m)
-      end
-
-      it 'nests in parent model' do
-        RailsAdmin.config do |config|
-          config.included_models = [Player, Comment]
-          config.model Comment do
-            parent Player
-          end
-        end
-        expect(helper.main_navigation).to match(/(Players).* (nav\-level\-1).*(Comments)/m)
-      end
-
-      it 'orders' do
-        RailsAdmin.config do |config|
-          config.included_models = [Player, Comment]
-        end
-        expect(helper.main_navigation).to match(/(Comments).*(Players)/m)
-
-        RailsAdmin.config(Comment) do
-          weight 1
-        end
-        expect(helper.main_navigation).to match(/(Players).*(Comments)/m)
-      end
-    end
-
-    describe '#static_navigation' do
-      it 'shows not show static nav if no static links defined' do
-        RailsAdmin.config do |config|
-          config.navigation_static_links = {}
-        end
-        expect(helper.static_navigation).to be_empty
-      end
-
-      it 'shows links if defined' do
-        RailsAdmin.config do |config|
-          config.navigation_static_links = {
-            'Test Link' => 'http://www.google.com',
-          }
-        end
-        expect(helper.static_navigation).to match(/Test Link/)
-      end
-
-      it 'shows default header if navigation_static_label not defined in config' do
-        RailsAdmin.config do |config|
-          config.navigation_static_links = {
-            'Test Link' => 'http://www.google.com',
-          }
-        end
-        expect(helper.static_navigation).to match(I18n.t('admin.misc.navigation_static_label'))
-      end
-
-      it 'shows custom header if defined' do
-        RailsAdmin.config do |config|
-          config.navigation_static_label = 'Test Header'
-          config.navigation_static_links = {
-            'Test Link' => 'http://www.google.com',
-          }
-        end
-        expect(helper.static_navigation).to match(/Test Header/)
-      end
-    end
-
-    describe '#bulk_menu' do
-      it 'includes all visible bulkable actions' do
-        RailsAdmin.config do |config|
-          config.actions do
-            index
-            collection :zorg do
-              bulkable true
-              action_name :zorg_action
-            end
-            collection :blub do
-              bulkable true
-              visible do
-                bindings[:abstract_model].model == Team
-              end
-            end
-          end
-        end
-        @action = RailsAdmin::Config::Actions.find :index
-        result = helper.bulk_menu(RailsAdmin::AbstractModel.new(Team))
-        expect(result).to match('zorg_action')
-        expect(result).to match('blub')
-
-        expect(helper.bulk_menu(RailsAdmin::AbstractModel.new(Player))).not_to match('blub')
       end
     end
   end

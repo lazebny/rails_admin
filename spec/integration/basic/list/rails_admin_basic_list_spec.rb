@@ -537,13 +537,26 @@ describe 'RailsAdmin Basic List', type: :request do
       ]
     end
 
+    it 'display scopes with proper hrefs' do
+      visit index_path(model_name: 'team', sort: 'id', sort_reverse: false)
+
+      within('#scope_selector') do
+        is_expected.not_to have_selector("a[href*='scope=_all']")
+        is_expected.to have_selector("a[href*='scope=red']")
+        is_expected.to have_selector("a[href*='scope=white']")
+      end
+    end
+
     it 'displays configured scopes' do
       visit index_path(model_name: 'team')
-      expect(find('#scope_selector li:first')).to have_content('All')
-      expect(find('#scope_selector li:nth-child(2)')).to have_content('Red')
-      expect(find('#scope_selector li:nth-child(3)')).to have_content('White')
-      expect(find('#scope_selector li:last')).to have_content('White')
-      expect(find('#scope_selector li.active')).to have_content('All')
+
+      within('#scope_selector') do
+        expect(find('li:first')).to have_content('All')
+        expect(find('li:nth-child(2)')).to have_content('Red')
+        expect(find('li:nth-child(3)')).to have_content('White')
+        expect(find('li:last')).to have_content('White')
+        expect(find('li.active')).to have_content('All')
+      end
     end
 
     it 'shows only scoped records' do
@@ -586,11 +599,13 @@ describe 'RailsAdmin Basic List', type: :request do
       context 'global' do
         it 'displays configured scopes' do
           visit index_path(model_name: 'team')
-          expect(find('#scope_selector li:first')).to have_content('every')
-          expect(find('#scope_selector li:nth-child(2)')).to have_content('krasnyj')
-          expect(find('#scope_selector li:nth-child(3)')).to have_content('White')
-          expect(find('#scope_selector li:last')).to have_content('White')
-          expect(find('#scope_selector li.active')).to have_content('every')
+          within('#scope_selector') do
+            expect(find('li:first')).to have_content('every')
+            expect(find('li:nth-child(2)')).to have_content('krasnyj')
+            expect(find('li:nth-child(3)')).to have_content('White')
+            expect(find('li:last')).to have_content('White')
+            expect(find('li.active')).to have_content('every')
+          end
         end
       end
       context 'per model' do

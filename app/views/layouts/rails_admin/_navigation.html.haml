@@ -6,7 +6,7 @@
       %span.icon-bar
       %span.icon-bar
     %a.navbar-brand.pjax{href: dashboard_path}
-      = @app_presenter.plugin_first_name
-      %small= @app_presenter.plugin_last_name
+      = rcell(RailsAdmin::PluginCell).plugin_full_name
+      %small= rcell(RailsAdmin::PluginCell).plugin_full_name
   .collapse.navbar-collapse#secondary-navigation
     = render partial: 'layouts/rails_admin/secondary_navigation'

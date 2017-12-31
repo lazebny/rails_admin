@@ -4,12 +4,19 @@ module RailsAdmin
   module ApplicationHelper
     include RailsAdmin::Support::I18n
 
-    def capitalize_first_letter(wording)
-      return nil unless wording.present? && wording.is_a?(String)
+    def rcell(cell_class, *args)
+      cell_class.build(self, *args)
+    end
 
-      wording = wording.dup
-      wording[0] = wording[0].mb_chars.capitalize.to_s
-      wording
+    # delegate :capitalize_first_letter,
+    #          to: ::RailsAdmin::Support::TextHelper
+
+    def capitalize_first_letter(text)
+      return nil unless text.present? && text.is_a?(String)
+
+      text
+        .dup
+        .tap { |t| t[0] = t[0].mb_chars.capitalize.to_s }
     end
 
     def authorized?(action_name, abstract_model = nil, object = nil)
@@ -17,10 +24,24 @@ module RailsAdmin
       action(action_name, abstract_model, object).try(:authorized?)
     end
 
-    def current_action?(action, abstract_model = @abstract_model, object = @object)
-      @action.custom_key == action.custom_key &&
-        abstract_model.try(:to_param) == @abstract_model.try(:to_param) &&
-        (@object.try(:persisted?) ? @object.id == object.try(:id) : !object.try(:persisted?))
+    def current_action?(action,
+                        global_action,
+                        abstract_model = nil,
+                        global_abstract_model = nil,
+                        object = nil,
+                        global_object = nil)
+      # actions comparison
+      return false unless global_action.custom_key == action.custom_key
+
+      # abstract models comparison
+      return false unless abstract_model.try(:to_param) == global_abstract_model.try(:to_param)
+
+      # objects comparison
+      if global_object.try(:persisted?)
+        global_object.id == object.try(:id)
+      else
+        !object.try(:persisted?)
+      end
     end
 
     def action(key, abstract_model = nil, object = nil)
@@ -59,41 +80,6 @@ module RailsAdmin
       )
     end
 
-    def main_navigation
-      # @app_presenter.main_navigation
-
-      ::RailsAdmin::NavigationPresenter.new(self).main_navigation
-    end
-
-    def breadcrumb(action = @action, _acc = [])
-      begin
-        (parent_actions ||= []) << action
-      end while action.breadcrumb_parent && (action = action(*action.breadcrumb_parent)) # rubocop:disable Loop
-
-      content_tag(:ol, class: 'breadcrumb') do
-        parent_actions.collect do |a|
-          am = a.send(:eval, 'bindings[:abstract_model]')
-          o = a.send(:eval, 'bindings[:object]')
-          content_tag(:li, class: current_action?(a, am, o) && 'active') do
-            crumb = begin
-              if !current_action?(a, am, o)
-                if a.http_methods.include?(:get)
-                  link_to rails_admin.url_for(action: a.action_name, controller: 'rails_admin/main', model_name: am.try(:to_param), id: (o.try(:persisted?) && o.try(:id) || nil)), class: 'pjax' do
-                    wording_for(:breadcrumb, a, am, o)
-                  end
-                else
-                  content_tag(:span, wording_for(:breadcrumb, a, am, o))
-                end
-              else
-                wording_for(:breadcrumb, a, am, o)
-              end
-            end
-            crumb
-          end
-        end.reverse.join.html_safe
-      end
-    end
-
     # parent => :root, :collection, :member
     def menu_for(parent, abstract_model = nil, object = nil, only_icon = false) # perf matters here (no action view trickery)
       actions(parent, abstract_model, object)
@@ -101,7 +87,7 @@ module RailsAdmin
         .map do |action|
         wording = wording_for(:menu, action)
         %(
-          <li title="#{wording if only_icon}" rel="#{'tooltip' if only_icon}" class="icon #{action.key}_#{parent}_link #{'active' if current_action?(action)}">
+          <li title="#{wording if only_icon}" rel="#{'tooltip' if only_icon}" class="icon #{action.key}_#{parent}_link #{'active' if current_action?(action, @action)}">
             <a class="#{action.pjax? ? 'pjax' : ''}" href="#{rails_admin.url_for(action: action.action_name, controller: 'rails_admin/main', model_name: abstract_model.try(:to_param), id: (object.try(:persisted?) && object.try(:id) || nil))}">
               <i class="#{action.link_icon}"></i>
               <span#{only_icon ? " style='display:none'" : ''}>#{wording}</span>
@@ -109,14 +95,6 @@ module RailsAdmin
           </li>
         )
       end.join.html_safe
-    end
-
-    # FIXME: Deprecated
-    def bulk_menu(abstract_model = @abstract_model)
-      locals = {
-        actions: actions(:bulkable, abstract_model)
-      }
-      render partial: 'rails_admin/main/index/bulk_menu', locals: locals
     end
 
     def flash_alert_class(flash_key)

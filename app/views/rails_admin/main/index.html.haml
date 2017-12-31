@@ -1,134 +1,31 @@
-:ruby
-  presenter_options = {
-    abstract_model: @abstract_model,
-    model_config: @model_config,
-    view_context: self
-  }
-  @presenter = ::RailsAdmin::Config::Presenters::IndexPresenter.new(presenter_options)
-
-  params = @presenter.params
-  sort_reverse = @presenter.sort_reverse
-  # columns paginate
-  sets = @presenter.get_column_sets
-  properties = sets[params[:set].to_i] || []
-  other_left = ((params[:set].to_i - 1) >= 0) && sets[params[:set].to_i - 1].present?
-  other_right = sets[params[:set].to_i + 1].present?
-
 - content_for :contextual_tabs do
-  - if @presenter.checkboxes?
-    = render partial: 'rails_admin/main/index/bulk_menu',
-             locals: { actions: @presenter.bulk_actions }
-  - if filterable_fields.present?
-    %li.dropdown{style: 'float:right'}
-      %a.dropdown-toggle{href: '#', :'data-toggle' => "dropdown"}
-        = t('admin.misc.add_filter')
-        %b.caret
-      %ul.dropdown-menu#filters{style: 'left:auto; right:0;'}
-        - filterable_fields.each do |field|
-          - field_options = case field.type
-          - when :enum
-            - options_for_select(field.with(object: @abstract_model.model.new).enum)
-          - else
-            - ''
-          %li
-            %a{href: '#',
-              :"data-field-label" => field.label,
-              :"data-field-name" => field.name,
-              :"data-field-options" => field_options.html_safe,
-              :"data-field-type" => field.type,
-              :"data-field-value" => "",
-              :"data-field-datetimepicker-format" => field.try(:parser) && field.parser.to_momentjs}= capitalize_first_letter(field.label)
+  = rcell(RailsAdmin::Index::FiltersCell, @abstract_model)[:bulk_menu]
+  = rcell(RailsAdmin::Index::FiltersCell, @abstract_model)[:filters]
 
 :javascript
-  jQuery(function($) {
-  #{ordered_filter_string}
-  });
+  #{rcell(RailsAdmin::Index::FiltersCell, @abstract_model)[:filters_js]}
 
 %style
-  - properties.select{ |p| p.column_width.present? }.each do |property|
-    = "#list th.#{property.css_class} { width: #{property.column_width}px; min-width: #{property.column_width}px; }"
-    = "#list td.#{property.css_class} { max-width: #{property.column_width}px; }"
+  = rcell(RailsAdmin::Index::TableCell, @abstract_model)[:styles]
 
 #list
-  = form_tag index_path(@presenter.index_params),
-             method: :get,
-             class: "pjax-form form-inline" do
-    .well
-      %span#filters_box
-      %hr.filters_box{style: "display:#{ordered_filters.empty? ? 'none' : 'block'}"}
-      .input-group
-        %input.form-control.input-small{name: "query",
-                                        type: "search",
-                                        value: @presenter.query,
-                                        placeholder: t("admin.misc.filter")}
-        %span.input-group-btn
-          %button.btn.btn-primary{type: 'submit',
-                                  :'data-disable-with' => '<i class="icon-white icon-refresh"></i> '.html_safe + t('admin.misc.refresh')}
-            %i.icon-white.icon-refresh
-            = t('admin.misc.refresh')
-          %button#remove_filter.btn.btn-info{title: "Reset filters"}
-            %i.icon-white.icon-remove
-      - if @presenter.export_action && authorized?(@presenter.export_action.authorization_key, @abstract_model)
-        %span{style: 'float:right'}
-          = link_to wording_for(:link, @presenter.export_action),
-                    export_path(@presenter.export_params),
-                    class: 'btn btn-info'
+  = rcell(RailsAdmin::Index::FiltersCell, @abstract_model)[:show]
+  = rcell(RailsAdmin::Index::ScopesCell, @abstract_model)[:show]
 
-  - if @presenter.scopes?
-    %ul.nav.nav-tabs#scope_selector
-      - @model_config.list.scopes.each_with_index do |scope, index|
-        - scope = '_all' if scope.nil?
-        %li{class: "#{'active' if scope.to_s == params[:scope] || (params[:scope].blank? && index == 0)}"}
-          %a{href: index_path(@presenter.index_with_scope_params(scope)), class: 'pjax'}= I18n.t("admin.scopes.#{@abstract_model.to_param}.#{scope}", default: I18n.t("admin.scopes.#{scope}", default: scope.to_s.titleize))
+  - bulk_path = bulk_action_path(model_name: @abstract_model.to_param)
 
-  = form_tag bulk_action_path(model_name: @abstract_model.to_param),
-             method: :post,
-             id: "bulk_form",
-             class: "form" do
+  = form_tag bulk_path, method: :post, id: "bulk_form", class: "form" do
+
     = hidden_field_tag :bulk_action
-    - if @presenter.model_description.present?
-      %p
-        %strong= @presenter.model_description
+    = rcell(RailsAdmin::IndexCell, @abstract_model)[:description]
 
     %table.table.table-condensed.table-striped
       %thead
-        %tr
-          - if @presenter.checkboxes?
-            %th.shrink
-              %input.toggle{type: "checkbox"}
-          - if other_left
-            %th.other.left.shrink= "..."
-          - properties.each do |property|
-            - if property.sortable
-              - sort_location = index_path @presenter.index_with_sort_params(property.name.to_s)
-              - sort_direction = @presenter.sort_direction(property.name.to_s)
-            %th{class: [property.sortable && "header pjax" || nil,
-                        (sort_direction if property.sortable && sort_direction),
-                        property.css_class,
-                        property.type_css_class].compact.join(" "),
-                :'data-href' => property.sortable && sort_location,
-                rel: "tooltip",
-                title: "#{property.hint}"}= capitalize_first_letter(property.label)
-          - if other_right
-            %th.other.right.shrink= "..."
-          %th.last.shrink
+        = rcell(RailsAdmin::Index::TableCell, @abstract_model)[:thead]
       %tbody
-        - @objects.each do |object|
-          %tr{class: ["#{@abstract_model.param_key}_row",
-                      "#{@model_config.list.with(object: object).row_css_class}"].join(" ")}
-            - if @presenter.checkboxes?
-              %td= check_box_tag "bulk_ids[]", object.id, false
-            - if other_left_link ||= other_left && index_path(params.except('set').merge(params[:set].to_i != 1 ? {set: (params[:set].to_i - 1)} : {}))
-              %td.other.left= link_to "...", other_left_link, class: 'pjax'
-            - properties.map{ |property| property.bind(:object, object) }.each do |property|
-              - value = property.pretty_value
-              %td{class: "#{property.css_class} #{property.type_css_class}",
-                  title: strip_tags(value.to_s)}= value
-            - if other_right_link ||= other_right && index_path(params.merge(set: (params[:set].to_i + 1)))
-              %td.other.right= link_to "...", other_right_link, class: 'pjax'
-            %td.last.links
-              %ul.inline.list-inline= menu_for :member, @abstract_model, object, true
+        = rcell(RailsAdmin::Index::TableCell, @abstract_model)[:tbody, @objects]
 
+    = rcell(RailsAdmin::Index::PaginationCell, @abstract_model)[:show, @objects]
     - if @model_config.list.limited_pagination
       .row
         .col-md-6= paginate(@objects, theme: 'ra-twitter-bootstrap/without_count', total_pages: Float::INFINITY, remote: true)

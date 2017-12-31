@@ -5,7 +5,6 @@ module RailsAdmin
     before_action { instance_eval &RailsAdmin::Config.authenticate_with }
     before_action { instance_eval &RailsAdmin::Config.authorize_with }
     before_action { instance_eval &RailsAdmin::Config.audit_with }
-    before_action :get_app_presenter
 
     helper_method :_current_user
 
@@ -31,10 +30,6 @@ module RailsAdmin
 
     def rails_admin_controller?
       true
-    end
-
-    def get_app_presenter
-      @app_presenter ||= ::RailsAdmin::AppPresenter.new(view_context)
     end
   end
 end

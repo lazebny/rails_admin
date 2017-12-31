@@ -1,8 +1,0 @@
-%li{ data: { model: config_model.abstract_model.to_param } }
-  = link_to rails_admin.index_path(model_name: config_model.abstract_model.to_param),
-            class: "pjax#{" nav-level-#{level}" if level > 0}" do
-    - if config_model.navigation_icon
-      %i{ class: config_model.navigation_icon }
-    = capitalize_first_letter(config_model.label_plural)
-
-

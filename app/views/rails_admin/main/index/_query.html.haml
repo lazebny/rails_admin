@@ -1,0 +1,19 @@
+= form_tag form_path,
+           method: :get,
+           class: "pjax-form form-inline" do
+  .well
+    %span#filters_box
+    %hr.filters_box{style: filters_box_style}
+    .input-group
+      %input.form-control.input-small{name: "query",
+                                      type: "search",
+                                      value: query,
+                                      placeholder: t("admin.misc.filter")}
+      %span.input-group-btn
+        %button.btn.btn-primary{type: 'submit', :'data-disable-with' => refresh_icon}
+          %i.icon-white.icon-refresh
+          = t('admin.misc.refresh')
+        %button#remove_filter.btn.btn-info{title: "Reset filters"}
+          %i.icon-white.icon-remove
+
+    = export_action
