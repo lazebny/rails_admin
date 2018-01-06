@@ -114,7 +114,7 @@ module RailsAdmin
           klass = RailsAdmin::AUDITING_ADAPTERS[extension]
           klass.setup if klass.respond_to? :setup
           @audit = proc do
-            @auditing_adapter = klass.new(*([self] + args).compact)
+            @auditing_adapter = klass.new(self, *args.compact)
           end
         elsif block
           @audit = block

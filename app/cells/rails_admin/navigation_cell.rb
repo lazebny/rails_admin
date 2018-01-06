@@ -7,7 +7,6 @@ module RailsAdmin
       :t,
       to: :view_context
     )
-
     delegate(
       :index_path,
       to: :rails_admin
@@ -15,7 +14,6 @@ module RailsAdmin
 
     def initialize(*)
       super
-
       @icon_cell = ::RailsAdmin::IconCell.build(view_context)
     end
 

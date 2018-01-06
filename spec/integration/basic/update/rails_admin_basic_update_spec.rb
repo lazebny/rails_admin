@@ -12,7 +12,7 @@ describe 'RailsAdmin Basic Update', type: :request do
     it 'returns to edit page' do
       fill_in 'player[name]', with: ''
       click_button 'Save' # first(:button, "Save").click
-      expect(page.driver.status_code).to eq(406)
+      is_expected.to have_http_status(406)
       is_expected.to have_selector "form[action='#{edit_path(model_name: 'player', id: @player.id)}']"
     end
   end

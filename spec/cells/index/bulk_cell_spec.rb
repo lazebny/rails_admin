@@ -1,12 +1,12 @@
 require 'spec_helper'
 
-describe RailsAdmin::Index::FiltersCell, type: :view do
+describe RailsAdmin::Index::BulkCell, type: :view do
   def cell(model)
     lview = view.extend(RailsAdmin::ApplicationHelper)
     described_class.new(lview, model)
   end
 
-  describe '#render_bulk_menu' do
+  describe '#render_dropdown' do
     it 'includes all visible bulkable actions' do
       RailsAdmin.config do |config|
         config.actions do
@@ -23,11 +23,11 @@ describe RailsAdmin::Index::FiltersCell, type: :view do
           end
         end
       end
-      actual = cell(RailsAdmin::AbstractModel.new(Team))[:bulk_menu]
+      actual = cell(RailsAdmin::AbstractModel.new(Team))[:dropdown]
       expect(actual).to match('zorg_action')
       expect(actual).to match('blub')
 
-      expect(cell(RailsAdmin::AbstractModel.new(Player))[:bulk_menu]).not_to match('blub')
+      expect(cell(RailsAdmin::AbstractModel.new(Player))[:dropdown]).not_to match('blub')
     end
   end
 end

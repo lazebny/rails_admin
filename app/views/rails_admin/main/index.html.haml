@@ -1,22 +1,28 @@
 - content_for :contextual_tabs do
-  = rcell(RailsAdmin::Index::FiltersCell, @abstract_model)[:bulk_menu]
-  = rcell(RailsAdmin::Index::FiltersCell, @abstract_model)[:filters]
+  = rcell(RailsAdmin::Index::BulkCell, @abstract_model)[:dropdown]
+  = rcell(RailsAdmin::Index::FiltersCell, @abstract_model)[:dropdown]
 
 :javascript
-  #{rcell(RailsAdmin::Index::FiltersCell, @abstract_model)[:filters_js]}
+  #{rcell(RailsAdmin::Index::FiltersCell, @abstract_model)[:js]}
 
 %style
   = rcell(RailsAdmin::Index::TableCell, @abstract_model)[:styles]
 
 #list
-  = rcell(RailsAdmin::Index::FiltersCell, @abstract_model)[:show]
+  = rcell(RailsAdmin::IndexCell, @abstract_model).call(:query_form) do
+    .well
+      = rcell(RailsAdmin::Index::FiltersCell)[:placeholder]
+      .input-group
+        = rcell(RailsAdmin::List::QueryCell)[:search_input]
+        %span.input-group-btn
+          = rcell(RailsAdmin::List::QueryCell)[:submit_button]
+          = rcell(RailsAdmin::Index::FiltersCell)[:reset_button]
+
+    = rcell(RailsAdmin::IndexCell, @abstract_model)[:export_button]
+
   = rcell(RailsAdmin::Index::ScopesCell, @abstract_model)[:show]
 
-  - bulk_path = bulk_action_path(model_name: @abstract_model.to_param)
-
-  = form_tag bulk_path, method: :post, id: "bulk_form", class: "form" do
-
-    = hidden_field_tag :bulk_action
+  = rcell(RailsAdmin::Index::BulkCell, @abstract_model).call(:form) do
     = rcell(RailsAdmin::IndexCell, @abstract_model)[:description]
 
     %table.table.table-condensed.table-striped
@@ -25,18 +31,4 @@
       %tbody
         = rcell(RailsAdmin::Index::TableCell, @abstract_model)[:tbody, @objects]
 
-    = rcell(RailsAdmin::Index::PaginationCell, @abstract_model)[:show, @objects]
-    - if @model_config.list.limited_pagination
-      .row
-        .col-md-6= paginate(@objects, theme: 'ra-twitter-bootstrap/without_count', total_pages: Float::INFINITY, remote: true)
-
-    - elsif @objects.respond_to?(:total_count)
-      - total_count = @objects.total_count.to_i
-      .row
-        .col-md-6= paginate(@objects, theme: 'ra-twitter-bootstrap', remote: true)
-      .row
-        .col-md-6= link_to(t("admin.misc.show_all"), index_path(params.merge(all: true)), class: "show-all btn btn-default clearfix pjax") unless total_count > 100 || total_count <= @objects.to_a.size
-      .clearfix.total-count= "#{total_count} #{@model_config.pluralize(total_count).downcase}"
-
-    - else
-      .clearfix.total-count= "#{@objects.size} #{@model_config.pluralize(@objects.size).downcase}"
+    = rcell(RailsAdmin::PaginationCell, @abstract_model)[:show, @objects]

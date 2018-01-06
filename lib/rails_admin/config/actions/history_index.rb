@@ -18,8 +18,15 @@ module RailsAdmin
 
         register_instance_option :controller do
           proc do
-            @general = true
-            @history = @auditing_adapter && @auditing_adapter.listing_for_model(@abstract_model, params[:query], params[:sort], params[:sort_reverse], params[:all], params[:page]) || []
+            @history = []
+            @history = @auditing_adapter.listing_for_model(
+              @abstract_model,
+              params[:query],
+              params[:sort],
+              params[:sort_reverse],
+              params[:all],
+              params[:page]
+            ) unless @auditing_adapter.nil?
 
             render @action.template_name
           end

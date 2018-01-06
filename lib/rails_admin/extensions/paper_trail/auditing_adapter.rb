@@ -1,34 +1,6 @@
 module RailsAdmin
   module Extensions
     module PaperTrail
-      class VersionProxy
-        def initialize(version, user_class = User)
-          @version = version
-          @user_class = user_class
-        end
-
-        def message
-          @message = @version.event
-          @version.respond_to?(:changeset) && @version.changeset.present? ? @message + ' [' + @version.changeset.to_a.collect { |c| c[0] + ' = ' + c[1][1].to_s }.join(', ') + ']' : @message
-        end
-
-        def created_at
-          @version.created_at
-        end
-
-        def table
-          @version.item_type
-        end
-
-        def username
-          @user_class.find(@version.whodunnit).try(:email) rescue nil || @version.whodunnit
-        end
-
-        def item
-          @version.item_id
-        end
-      end
-
       class AuditingAdapter
         COLUMN_MAPPING = {
           table: :item_type,
@@ -104,7 +76,7 @@ module RailsAdmin
           versions = version_class_for(model_name).where item_type: model_name
           versions = versions.where item_id: object.id if object
           versions = versions.where('event LIKE ?', "%#{query}%") if query.present?
-          versions = versions.order(sort_reverse == 'true' ? "#{sort} DESC" : sort)
+          versions = versions.reorder(sort_reverse == 'true' ? "#{sort} DESC" : sort)
           versions = all ? versions : versions.send(Kaminari.config.page_method_name, current_page).per(per_page)
           paginated_proxies = Kaminari.paginate_array([], total_count: versions.try(:total_count) || versions.count)
           paginated_proxies = paginated_proxies.page(current_page).per(per_page)

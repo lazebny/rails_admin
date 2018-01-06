@@ -90,7 +90,7 @@ describe 'RailsAdmin Basic Edit', type: :request do
     end
 
     it 'raises NotFound' do
-      expect(page.driver.status_code).to eq(404)
+      is_expected.to have_http_status(404)
     end
   end
 

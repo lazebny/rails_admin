@@ -6,10 +6,13 @@ module RailsAdmin
       :rails_admin,
       to: :view_context
     )
-
     delegate(
       :abstract_model,
       to: :model_config
+    )
+    delegate(
+      :url_for,
+      to: :rails_admin
     )
 
     def self.build(view_context, model = nil, options = {})
@@ -58,7 +61,18 @@ module RailsAdmin
       @actions.select_visible(with_default_bindings(bindings), &filter)
     end
 
-    def with_default_bindings(bindings)
+    def current_path(options = {})
+      base_options = params.permit(
+        :action,
+        :controller,
+        :id,
+        :model_name,
+      ).symbolize_keys
+      base_options[:only_path] = true
+      url_for(base_options.merge(options))
+    end
+
+    def with_default_bindings(bindings = {})
       lbindings = bindings.dup
       lbindings[:abstract_model] = abstract_model unless bindings.key?(:abstract_model)
       lbindings[:controller] = controller unless bindings.key?(:controller)

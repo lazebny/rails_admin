@@ -24,7 +24,7 @@ describe RailsAdmin::Config::Commands::GetList do
     end
   end
 
-  describe '#get_sort_hash' do
+  describe '#sort_hash' do
     context 'options sortable is a hash' do
       before do
         RailsAdmin.config('Player') do
@@ -38,21 +38,21 @@ describe RailsAdmin::Config::Commands::GetList do
 
       it 'returns the option with no changes' do
         params = {sort: 'team', model_name: 'players'}
-        expect(instance.send(:get_sort_hash, params, RailsAdmin.config(Player)))
+        expect(instance.send(:sort_hash, params, RailsAdmin.config(Player)))
           .to eq(sort: :"team.name", sort_reverse: true)
       end
     end
 
     it 'works with belongs_to associations with label method virtual' do
       params = {sort: 'parent_category', model_name: 'categories'}
-      expect(instance.send(:get_sort_hash, params, RailsAdmin.config(Category)))
+      expect(instance.send(:sort_hash, params, RailsAdmin.config(Category)))
         .to eq(sort: 'categories.parent_category_id', sort_reverse: true)
     end
 
     context 'using mongoid, not supporting joins', mongoid: true do
       it 'gives back the remote table with label name' do
         params = {sort: 'team', model_name: 'players'}
-        expect(instance.send(:get_sort_hash, params, RailsAdmin.config(Player)))
+        expect(instance.send(:sort_hash, params, RailsAdmin.config(Player)))
           .to eq(sort: 'players.team_id', sort_reverse: true)
       end
     end
@@ -60,7 +60,7 @@ describe RailsAdmin::Config::Commands::GetList do
     context 'using active_record, supporting joins', active_record: true do
       it 'gives back the local column' do
         params = {sort: 'team', model_name: 'players'}
-        expect(instance.send(:get_sort_hash, params, RailsAdmin.config(Player)))
+        expect(instance.send(:sort_hash, params, RailsAdmin.config(Player)))
           .to eq(sort: 'teams.name', sort_reverse: true)
       end
     end

@@ -66,8 +66,12 @@ RSpec.configure do |config|
   config.include Warden::Test::Helpers
 
   config.before do |example|
-    DatabaseCleaner.strategy = (CI_ORM == :mongoid || example.metadata[:js]) ? :truncation : :transaction
-
+    DatabaseCleaner.strategy =
+      if CI_ORM == :mongoid || example.metadata[:js]
+        :truncation
+      else
+        :transaction
+      end
     DatabaseCleaner.start
     RailsAdmin::Config.reset
     RailsAdmin::AbstractModel.reset
@@ -75,7 +79,7 @@ RSpec.configure do |config|
     RailsAdmin::Config.yell_for_non_accessible_fields = false
   end
 
-  config.after(:each) do
+  config.after do
     Warden.test_reset!
     DatabaseCleaner.clean
   end

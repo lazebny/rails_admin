@@ -1,10 +1,5 @@
 module RailsAdmin
   class PluginCell < BaseCell
-    def initialize(*)
-      super
-      @config = ::RailsAdmin.config
-    end
-
     def plugin_full_name
       [plugin_first_name, plugin_last_name].join(' ')
     end

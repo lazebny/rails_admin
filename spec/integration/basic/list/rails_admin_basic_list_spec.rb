@@ -5,16 +5,10 @@ require 'spec_helper'
 describe 'RailsAdmin Basic List', type: :request do
   subject { page }
 
-  describe 'GET /admin' do
-    it 'responds successfully' do
-      visit dashboard_path
-    end
-  end
-
   describe 'GET /admin/typo' do
     it "redirects to dashboard and inform the user the model wasn't found" do
       visit '/admin/whatever'
-      expect(page.driver.status_code).to eq(404)
+      is_expected.to have_http_status(404)
       expect(find('.alert-danger')).to have_content("Model 'Whatever' could not be found")
     end
   end
@@ -22,7 +16,7 @@ describe 'RailsAdmin Basic List', type: :request do
   describe 'GET /admin/balls/545-typo' do
     it "redirects to balls index and inform the user the id wasn't found" do
       visit '/admin/ball/545-typo'
-      expect(page.driver.status_code).to eq(404)
+      is_expected.to have_http_status(404)
       expect(find('.alert-danger')).to have_content("Ball with id '545-typo' could not be found")
     end
   end
@@ -339,79 +333,22 @@ describe 'RailsAdmin Basic List', type: :request do
   end
 
   context 'List with 3 pages' do
-    def visit_page(page)
-      visit index_path(model_name: 'player', page: page)
+    let(:items_per_page) { 1 }
+
+    def page_path(**opts)
+      index_path(opts.merge(model_name: 'player'))
     end
 
-    before do
-      RailsAdmin.config.default_items_per_page = 1
-      (RailsAdmin.config.default_items_per_page * 3).times { FactoryGirl.create(:player) }
+    def create_record
+      FactoryGirl.create(:player)
     end
 
-    describe 'with limited_pagination=false' do
-      it 'page 1' do
-        visit_page(1)
+    it_behaves_like :default_pagination_examples
 
-        within('ul.pagination') do
-          expect(find('li:first')).to have_content('« Prev')
-          expect(find('li:last')).to have_content('Next »')
-          expect(find('li.active')).to have_content('1')
-        end
-      end
-
-      it 'page 2' do
-        visit_page(2)
-
-        within('ul.pagination') do
-          expect(find('li:first')).to have_content('« Prev')
-          expect(find('li:last')).to have_content('Next »')
-          expect(find('li.active')).to have_content('2')
-        end
-      end
-
-      it 'page 3' do
-        visit_page(3)
-
-        within('ul.pagination') do
-          expect(find('li:first')).to have_content('« Prev')
-          expect(find('li:last')).to have_content('Next »')
-          expect(find('li.active')).to have_content('3')
-        end
-      end
-    end
-
-    context 'with limited_pagination=true' do
+    it_behaves_like :limited_pagination_examples do
       before do
-        allow(RailsAdmin::AbstractModel.new(Player).config.list).
-          to receive(:limited_pagination).
-          and_return(true)
-      end
-
-      it 'page 1' do
-        visit_page(1)
-
-        within('ul.pagination') do
-          expect(find('li:first')).not_to have_content('« Prev')
-          expect(find('li:last')).to have_content('Next »')
-        end
-      end
-
-      it 'page 2' do
-        visit_page(2)
-
-        within('ul.pagination') do
-          expect(find('li:first')).to have_content('« Prev')
-          expect(find('li:last')).to have_content('Next »')
-        end
-      end
-
-      it 'page 3' do
-        visit_page(3)
-
-        within('ul.pagination') do
-          expect(find('li:first')).to have_content('« Prev')
-          expect(find('li:last')).to have_content('Next »')
-        end
+        list = RailsAdmin::AbstractModel.new(Player).config.list
+        allow(list).to receive(:limited_pagination).and_return(true)
       end
     end
   end

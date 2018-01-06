@@ -14,7 +14,7 @@ module RailsAdmin
         # Specify field as virtual if type is not specifically set and field was not
         # found in default stack
         if field.nil? && type.nil?
-          field = (_fields << RailsAdmin::Config::Fields::Types.load(:string).new(self, name, nil)).last
+          _fields << field = RailsAdmin::Config::Fields::Types.load(:string).new(self, name, nil)
 
         # Register a custom field type if one is provided and it is different from
         # one found in default stack
@@ -24,7 +24,7 @@ module RailsAdmin
             field = _fields[_fields.index(field)] = RailsAdmin::Config::Fields::Types.load(type).new(self, name, properties)
           else
             properties = abstract_model.properties.detect { |p| name == p.name }
-            field = (_fields << RailsAdmin::Config::Fields::Types.load(type).new(self, name, properties)).last
+            _fields << field = RailsAdmin::Config::Fields::Types.load(type).new(self, name, properties)
           end
         end
 
@@ -114,7 +114,26 @@ module RailsAdmin
       # Get all fields defined as visible, in the correct order.
       def visible_fields
         i = 0
-        all_fields.collect { |f| f.with(bindings) }.select(&:visible?).sort_by { |f| [f.order, i += 1] } # stable sort, damn
+        all_fields
+          .collect { |f| f.with(bindings) }
+          .select(&:visible?)
+          .sort_by { |f| [f.order, i += 1] } # stable sort, damn
+      end
+
+      def init_fields(empty: false, readonly: false)
+        if empty
+          @_ro_fields = []
+          @_fields = []
+          return
+        end
+
+        if self.class == RailsAdmin::Config::Sections::Base
+          @_ro_fields = @_fields = RailsAdmin::Config::Fields.factory(self)
+        else
+          # parent is RailsAdmin::Config::Model, recursion is on Section's classes
+          @_ro_fields ||= parent.send(self.class.superclass.to_s.underscore.split('/').last)._fields(true).freeze
+        end
+        readonly ? @_ro_fields : (@_fields ||= @_ro_fields.collect(&:clone))
       end
 
     protected
@@ -126,13 +145,7 @@ module RailsAdmin
         return @_fields if @_fields
         return @_ro_fields if readonly && @_ro_fields
 
-        if self.class == RailsAdmin::Config::Sections::Base
-          @_ro_fields = @_fields = RailsAdmin::Config::Fields.factory(self)
-        else
-          # parent is RailsAdmin::Config::Model, recursion is on Section's classes
-          @_ro_fields ||= parent.send(self.class.superclass.to_s.underscore.split('/').last)._fields(true).freeze
-        end
-        readonly ? @_ro_fields : (@_fields ||= @_ro_fields.collect(&:clone))
+        init_fields(readonly: readonly)
       end
     end
   end

@@ -2,11 +2,13 @@ module RailsAdmin
   module Index
     class ScopesCell < BaseCell
       SCOPE_ALL = '_all'
+      TRANSLATION_SCOPE = 'admin.scopes'
 
       delegate(
         :content_tag,
         :link_to,
         :params,
+        :t,
         to: :view_context
       )
 
@@ -38,8 +40,16 @@ module RailsAdmin
       end
 
       def translate_scope(scope)
-        default = I18n.t("admin.scopes.#{scope}", default: scope.titleize)
-        I18n.t("admin.scopes.#{abstract_model.to_param}.#{scope}", default: default)
+        default = t(
+          scope,
+          default: scope.titleize,
+          scope: TRANSLATION_SCOPE
+        )
+        t(
+          [abstract_model.to_param, scope].join('.'),
+          default: default,
+          scope: TRANSLATION_SCOPE
+        )
       end
 
       def scope_path(scope)

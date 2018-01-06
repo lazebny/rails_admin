@@ -22,7 +22,7 @@ describe 'RailsAdmin Basic Show', type: :request do
   describe 'GET /admin/players/123this-id-doesnt-exist' do
     it 'raises NotFound' do
       visit '/admin/players/123this-id-doesnt-exist'
-      expect(page.driver.status_code).to eq(404)
+      is_expected.to have_http_status(404)
     end
   end
 

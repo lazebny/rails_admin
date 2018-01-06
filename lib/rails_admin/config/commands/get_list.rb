@@ -22,7 +22,7 @@ module RailsAdmin
                                     per: (params[:per] || model_config.list.items_per_page))
           end
           options = options.merge(include: associations) unless associations.blank?
-          options = options.merge(get_sort_hash(params, model_config))
+          options = options.merge(sort_hash(params, model_config))
           options = options.merge(query: params[:query]) if params[:query].present?
           options = options.merge(filters: params[:f]) if params[:f].present?
           options = options.merge(bulk_ids: params[:bulk_ids]) if params[:bulk_ids]
@@ -31,18 +31,22 @@ module RailsAdmin
 
         private
 
-        def get_sort_hash(params, model_config)
+        def sort_hash(params, model_config)
           abstract_model = model_config.abstract_model
-          unless model_config.list.fields.collect { |f| f.name.to_s }.include? params[:sort]
-            params[:sort] = params[:sort_reverse] = nil
-          end
-          params[:sort] ||= model_config.list.sort_by.to_s
-          params[:sort_reverse] ||= 'false'
 
-          field = model_config.list.fields.detect { |f| f.name.to_s == params[:sort] }
-          column =
+          field = nil
+          sort = params[:sort]
+
+          field = sort_field(sort, model_config) unless sort.nil?
+
+          if field.nil?
+            sort = model_config.list.sort_by
+            field = sort_field(sort, model_config)
+          end
+
+          sort_column =
             if field.nil? || field.sortable == true # use params[:sort] on the base table
-              "#{abstract_model.table_name}.#{params[:sort]}"
+              "#{abstract_model.table_name}.#{sort}"
             elsif field.sortable == false # use default sort, asked field is not sortable
               "#{abstract_model.table_name}.#{model_config.list.sort_by}"
             elsif (field.sortable.is_a?(String) || field.sortable.is_a?(Symbol)) && field.sortable.to_s.include?('.') # just provide sortable, don't do anything smart
@@ -55,10 +59,22 @@ module RailsAdmin
               "#{abstract_model.table_name}.#{field.sortable}"
             end
 
+          sort_reverse = params[:sort_reverse] || 'false'
           reversed_sort = (field ? field.sort_reverse? : model_config.list.sort_reverse?)
-          {sort: column, sort_reverse: (params[:sort_reverse] == reversed_sort.to_s)}
+          {
+            sort: sort_column,
+            sort_reverse: (sort_reverse == reversed_sort.to_s)
+          }
         end
 
+        def sort_field(sort, model_config)
+          return if sort.nil?
+
+          model_config
+            .list
+            .fields
+            .find { |f| f.name == sort.to_sym }
+        end
       end
     end
   end

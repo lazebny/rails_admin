@@ -1,13 +1,22 @@
 module RailsAdmin
   class IndexCell < BaseCell
     delegate(
+      :authorized?,
       :content_tag,
+      :form_tag,
+      :link_to,
+      :params,
+      :t,
+      :wording_for,
       to: :view_context
     )
-
     delegate(
       :description,
       to: :model_config
+    )
+    delegate(
+      :export_path,
+      to: :rails_admin
     )
 
     def render_description
@@ -16,26 +25,40 @@ module RailsAdmin
       content_tag(:p) { content_tag(:strong, description) }
     end
 
-    private
+    def render_query_form(&block)
+      query_params = params.permit(
+        :scope,
+        :set,
+        :sort,
+        :sort_reverse,
+      ).symbolize_keys
 
-    # FIXME: remove
-    # def params
-    #   @params ||=
-    #     begin
-    #       except_keys = [
-    #         :authenticity_token,
-    #         :action,
-    #         :controller,
-    #         :utf8,
-    #         :bulk_export,
-    #         :_pjax
-    #       ]
-    #       lparams = origin_params.except(*except_keys)
-    #       lparams.delete(:query) if lparams[:query].blank?
-    #       lparams.delete(:sort_reverse) unless lparams[:sort_reverse] == 'true'
-    #       lparams.delete(:sort) if lparams[:sort] == model_config.list.sort_by.to_s
-    #       lparams
-    #     end
-    # end
+      form_tag(
+        current_path(query_params),
+        method: :get,
+        class: "pjax-form form-inline",
+        &block
+      )
+    end
+
+    def render_export_button
+      export_action = find_visible_action(:export, object: nil)
+      export_params = params.permit(
+        :f,
+        :query,
+        :scope,
+        :sort,
+        :sort_revers,
+      )
+
+      return if export_action.nil?
+      return unless authorized?(export_action.authorization_key, abstract_model)
+
+      content_tag(:span, style: 'float:right') do
+        link_to wording_for(:link, export_action),
+                export_path(export_params),
+                class: 'btn btn-info'
+      end
+    end
   end
 end

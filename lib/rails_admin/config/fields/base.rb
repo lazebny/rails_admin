@@ -210,12 +210,10 @@ module RailsAdmin
         end
 
         register_instance_option :visible? do
-          returned = true
-          (RailsAdmin.config.default_hidden_fields || {}).each do |section, fields|
-            next unless self.section.is_a?("RailsAdmin::Config::Sections::#{section.to_s.camelize}".constantize)
-            returned = false if fields.include?(name)
+          (RailsAdmin.config.default_hidden_fields || {}).none? do |sname, sfields|
+            ancestor = RailsAdmin::Config::Sections.const_get(sname.to_s.camelize)
+            section.is_a?(ancestor) && sfields.include?(name)
           end
-          returned
         end
 
         # columns mapped (belongs_to, paperclip, etc.). First one is used for searching/sorting by default

@@ -2,13 +2,13 @@ require 'spec_helper'
 require 'paper_trail/frameworks/rspec' if defined?(PaperTrail)
 
 describe 'RailsAdmin PaperTrail history', active_record: true do
-  before(:each) do
+  before do
     RailsAdmin.config do |config|
       config.audit_with :paper_trail, 'User', 'PaperTrail::Version'
     end
   end
 
-  after(:each) do
+  after do
     # if #user_for_paper_trail is left unused, PaperTrail complains about it
     RailsAdmin::ApplicationController.class_eval do
       undef user_for_paper_trail
@@ -37,8 +37,7 @@ describe 'RailsAdmin PaperTrail history', active_record: true do
   end
 
   describe 'model history fetch' do
-    before(:each) do
-      PaperTrail::Version.delete_all
+    before do
       @model = RailsAdmin::AbstractModel.new('PaperTrailTest')
       @user = FactoryGirl.create :user
       @paper_trail_test = FactoryGirl.create :paper_trail_test
@@ -84,9 +83,9 @@ describe 'RailsAdmin PaperTrail history', active_record: true do
       end
 
       describe 'returned version objects' do
-        before(:each) do
-          @padinated_listing = @adapter.listing_for_model @model, nil, false, false, false, nil
-          @version = @padinated_listing.first
+        before do
+          paginated_listing = @adapter.listing_for_model @model, nil, false, false, false, nil
+          @version = paginated_listing.first
         end
 
         it '#username returns user email' do

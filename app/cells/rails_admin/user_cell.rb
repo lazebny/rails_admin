@@ -1,17 +1,17 @@
 module RailsAdmin
   class UserCell < BaseCell
+    delegate(
+      :content_tag,
+      :image_tag,
+      :link_to,
+      :t,
+      to: :view_context
+    )
+
     def initialize(*)
       super
-      @actions = ::RailsAdmin::Config::Actions
-      @config = ::RailsAdmin::Config
       @md5 = Digest::MD5
     end
-
-    delegate :content_tag,
-             :image_tag,
-             :link_to,
-             :t,
-             to: :@view_context
 
     def render_secondary_navigation
       return if model.nil?
