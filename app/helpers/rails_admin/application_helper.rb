@@ -96,14 +96,5 @@ module RailsAdmin
         )
       end.join.html_safe
     end
-
-    def flash_alert_class(flash_key)
-      case flash_key.to_s
-      when 'error'  then 'alert-danger'
-      when 'alert'  then 'alert-warning'
-      when 'notice' then 'alert-info'
-      else "alert-#{flash_key}"
-      end
-    end
   end
 end

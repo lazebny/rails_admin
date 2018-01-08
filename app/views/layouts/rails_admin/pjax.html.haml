@@ -5,11 +5,7 @@
 %title= "#{@abstract_model.try(:pretty_name) || @page_name} | #{rcell(RailsAdmin::Shared::PluginCell).plugin_full_name}"
 .page-header
   %h1= @page_name
-- flash && flash.each do |key, value|
-  .alert.alert-dismissible{class: flash_alert_class(key)}
-    %button.close{type: 'button', :'data-dismiss' => "alert"} &times;
-    = value
-
+= rcell(RailsAdmin::Layouts::FlashCell)[:show, flash]
 = rcell(RailsAdmin::Shared::BreadcrumbCell, @abstract_model)[:show, @action, @object]
 
 %ul.nav.nav-tabs
