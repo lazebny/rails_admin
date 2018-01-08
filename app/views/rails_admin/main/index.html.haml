@@ -13,9 +13,9 @@
     .well
       = rcell(RailsAdmin::Index::FiltersCell)[:placeholder]
       .input-group
-        = rcell(RailsAdmin::List::QueryCell)[:search_input]
+        = rcell(RailsAdmin::Shared::List::QueryCell)[:search_input]
         %span.input-group-btn
-          = rcell(RailsAdmin::List::QueryCell)[:submit_button]
+          = rcell(RailsAdmin::Shared::List::QueryCell)[:submit_button]
           = rcell(RailsAdmin::Index::FiltersCell)[:reset_button]
 
     = rcell(RailsAdmin::IndexCell, @abstract_model)[:export_button]
@@ -31,4 +31,4 @@
       %tbody
         = rcell(RailsAdmin::Index::TableCell, @abstract_model)[:tbody, @objects]
 
-    = rcell(RailsAdmin::PaginationCell, @abstract_model)[:show, @objects]
+    = rcell(RailsAdmin::Shared::PaginationCell, @abstract_model)[:show, @objects]

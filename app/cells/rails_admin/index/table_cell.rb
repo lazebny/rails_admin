@@ -19,7 +19,7 @@ module RailsAdmin
 
       def initialize(*)
         super
-        @sortable_table = ::RailsAdmin::List::SortableTableCell.build(view_context)
+        @sortable_table = ::RailsAdmin::Shared::List::SortableTableCell.build(view_context)
       end
 
       def render_styles

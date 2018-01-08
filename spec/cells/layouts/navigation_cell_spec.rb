@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RailsAdmin::NavigationCell, type: :view do
+describe RailsAdmin::Layouts::SidebarNavigationCell, type: :view do
   let(:cell) do
     lview = view.extend(RailsAdmin::ApplicationHelper)
     described_class.new(lview)

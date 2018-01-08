@@ -13,7 +13,7 @@ module RailsAdmin
 
       def initialize(*)
         super
-        @icon_cell = ::RailsAdmin::IconCell.build(view_context)
+        @icon_cell = ::RailsAdmin::Shared::IconCell.build(view_context)
       end
 
       def render_placeholder

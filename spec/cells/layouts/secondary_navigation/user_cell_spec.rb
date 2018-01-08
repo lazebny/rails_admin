@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RailsAdmin::UserCell, type: :helper do
+describe RailsAdmin::Layouts::Navigation::SecondaryNavigation::UserCell, type: :helper do
   let(:user) { OpenStruct.new }
 
   def cell(user)

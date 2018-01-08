@@ -2,7 +2,7 @@
   $('.nav.nav-pills li.active').removeClass('active');
   $('.nav.nav-pills li[data-model="#{@abstract_model.to_param}"]').addClass('active');
 
-%title= "#{@abstract_model.try(:pretty_name) || @page_name} | #{rcell(RailsAdmin::PluginCell).plugin_full_name}"
+%title= "#{@abstract_model.try(:pretty_name) || @page_name} | #{rcell(RailsAdmin::Shared::PluginCell).plugin_full_name}"
 .page-header
   %h1= @page_name
 - flash && flash.each do |key, value|
@@ -10,7 +10,7 @@
     %button.close{type: 'button', :'data-dismiss' => "alert"} &times;
     = value
 
-= rcell(RailsAdmin::BreadcrumbCell, @abstract_model)[:show, @action, @object]
+= rcell(RailsAdmin::Shared::BreadcrumbCell, @abstract_model)[:show, @action, @object]
 
 %ul.nav.nav-tabs
   = menu_for((@abstract_model ? (@object.try(:persisted?) ? :member : :collection) : :root), @abstract_model, @object)

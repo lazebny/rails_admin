@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RailsAdmin::BreadcrumbCell, type: :view do
+describe RailsAdmin::Shared::BreadcrumbCell, type: :view do
   def cell(model)
     lview = view.extend(RailsAdmin::ApplicationHelper)
     described_class.new(lview, model)

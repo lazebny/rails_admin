@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RailsAdmin::PluginCell, type: :helper do
+describe RailsAdmin::Shared::PluginCell, type: :helper do
   let(:cell) { described_class.new(controller.view_context) }
 
   describe '#plugin_name' do

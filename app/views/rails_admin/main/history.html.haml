@@ -1,9 +1,9 @@
 = rcell(RailsAdmin::HistoryCell, @abstract_model).call(:query_form) do
   .well
     .input-group
-      = rcell(RailsAdmin::List::QueryCell)[:search_input]
+      = rcell(RailsAdmin::Shared::List::QueryCell)[:search_input]
       %span.input-group-btn
-        = rcell(RailsAdmin::List::QueryCell)[:submit_button]
+        = rcell(RailsAdmin::Shared::List::QueryCell)[:submit_button]
 
 %table#history.table.table-striped.table-condensed
   %thead
@@ -13,5 +13,5 @@
     %tr
       = rcell(RailsAdmin::HistoryCell, @abstract_model)[:tbody, @history]
 
-= rcell(RailsAdmin::PaginationCell, @abstract_model)[:show, @history]
+= rcell(RailsAdmin::Shared::PaginationCell, @abstract_model)[:show, @history]
 
